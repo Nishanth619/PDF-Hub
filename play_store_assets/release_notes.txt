@@ -1,0 +1,35 @@
+# PDF Hub - Release Notes
+
+## Version 1.0.0
+
+### New Features
+- Convert PDF files to various formats (Image, Word, Excel, PPT)
+- Merge multiple PDF files into one document
+- Split PDF files into separate pages or ranges
+- Compress PDF files to reduce file size
+- Rotate PDF pages to desired orientations
+- Add watermarks to PDF documents
+- Insert page numbers into PDF files
+- Extract text from PDF files using OCR technology
+- Convert images to PDF documents
+
+### Improvements
+- Enhanced user interface with intuitive design
+- Optimized performance for faster processing
+- Added support for batch operations
+- Improved file handling and security
+
+### Bug Fixes
+- Fixed issues with file selection on Android 13+
+- Resolved crashes during large file processing
+- Addressed memory leaks in image processing
+- Fixed notification handling issues
+
+### Permissions
+This app requires the following permissions:
+- Internet: To access online services and APIs
+- Camera: To capture images for conversion to PDF
+- Storage: To read and write PDF files
+- Notifications: To show processing status updates
+
+For any support requests, please contact our support team.

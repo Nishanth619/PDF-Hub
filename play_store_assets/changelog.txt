@@ -1,0 +1,46 @@
+# PDF Hub - Change Log
+
+## Version 1.0.0 (October 29, 2025)
+Initial release of PDF Hub with comprehensive PDF processing capabilities.
+
+### New Features
+- PDF conversion (to/from multiple formats)
+- PDF merging and splitting
+- PDF compression and optimization
+- Page rotation and reordering
+- Watermark addition
+- Page numbering
+- OCR text extraction
+- Image to PDF conversion
+- Batch processing support
+
+### Technical Improvements
+- Optimized for Android 5.0+ devices
+- Adaptive UI for phones and tablets
+- Dark mode support
+- Local processing for privacy
+- Efficient memory management
+- Background processing capabilities
+
+### Bug Fixes
+- File selection issues on Android 13+
+- Memory leaks in image processing
+- Notification handling improvements
+- Crash fixes for large files
+
+## Version 0.9.0 (October 15, 2025)
+Beta release with core functionality testing.
+
+### Features
+- Basic PDF conversion tools
+- Simple merging and splitting
+- Initial UI design
+- Performance testing
+
+### Known Issues
+- Limited Android 13+ compatibility
+- Memory usage optimization needed
+- Notification system improvements required
+
+---
+*End of Change Log*
