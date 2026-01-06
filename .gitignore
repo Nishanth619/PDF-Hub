@@ -68,3 +68,8 @@ setup_app_icon_guide.md
 # Android build artifacts
 /android/build/
 /android/.gradle/
+
+# Development files
+TODO.md
+TODO_*.md
+flutter_*.png
