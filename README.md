@@ -146,7 +146,15 @@ lib/
 ## 📱 Screenshots
 
 <div align="center">
-<i>Screenshots coming soon</i>
+
+| Home | Convert | Merge | Compress |
+|:----:|:-------:|:-----:|:--------:|
+| <img src="screenshots/home_screen.png" width="180"/> | <img src="screenshots/convert_screen.png" width="180"/> | <img src="screenshots/merge_screen.png" width="180"/> | <img src="screenshots/compress_screen.png" width="180"/> |
+
+| Watermark | OCR | Image to PDF | Rotate |
+|:---------:|:---:|:------------:|:------:|
+| <img src="screenshots/watermark_screen.png" width="180"/> | <img src="screenshots/ocr_screen.png" width="180"/> | <img src="screenshots/image_to_pdf_screen.png" width="180"/> | <img src="screenshots/rotate_screen.png" width="180"/> |
+
 </div>
 
 ---
