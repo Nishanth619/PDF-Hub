@@ -15,6 +15,23 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [Project Overview](#-project-overview)
+- [Problem Statement](#-problem-statement)
+- [Solution](#-solution)
+- [Tech Stack](#️-tech-stack)
+- [Architecture](#️-architecture)
+- [Performance Optimizations](#-performance-optimizations)
+- [Screenshots](#-screenshots)
+- [Getting Started](#-getting-started)
+- [Play Store](#-play-store)
+- [Disclaimer](#️-disclaimer)
+- [Author](#-author)
+- [License](#-license)
+
+---
+
 ## 📋 Project Overview
 
 PDF Hub is a feature-rich, offline-capable PDF processing application built with Flutter. It provides professional-grade PDF tools including OCR text extraction, document compression, merging, splitting, annotation, and format conversion — all within a beautiful, responsive UI.
