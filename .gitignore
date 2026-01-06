@@ -57,6 +57,7 @@ upload-keystore.jks
 
 # IDE
 .vscode/
+.metadata
 
 # Development scripts and tools
 *.bat
