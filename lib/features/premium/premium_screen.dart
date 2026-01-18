@@ -14,6 +14,7 @@ class PremiumScreen extends StatelessWidget {
     final scale = ResponsiveUtils.getContentScale(context);
 
     return BaseScreen(
+      trackFeatureVisit: false, // Premium is not a feature screen
       child: Scaffold(
         body: Consumer<PremiumService>(
           builder: (context, premium, _) {

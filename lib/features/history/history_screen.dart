@@ -43,6 +43,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final scale = ResponsiveUtils.getContentScale(context);
     return BaseScreen(
+      trackFeatureVisit: false, // History is not a feature screen
       child: Scaffold(
         appBar: AppBar(
           title: const Text('History'),

@@ -71,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return BaseScreen(
       canPop: false,
       showBannerAd: false, // Has own bottomNavigationBar ad
+      trackFeatureVisit: false, // Home is not a feature screen
       child: Scaffold(
         bottomNavigationBar: const BottomBannerAd(),
         body: SafeArea(

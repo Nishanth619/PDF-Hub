@@ -21,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return BaseScreen(
+      trackFeatureVisit: false, // Settings is not a feature screen
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Settings'),
