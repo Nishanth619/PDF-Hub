@@ -11,7 +11,8 @@ class AdService {
   bool _isInitialized = false;
   InterstitialAd? _interstitialAd;
   int _operationCount = 0;
-  static const int _adsInterval = 3; // Show interstitial every 3 operations
+  int _featureVisitCount = 0;
+  static const int _featureVisitInterval = 3; // Show interstitial every 3 feature visits
   int _interstitialRetryCount = 0;
   static const int _maxRetries = 3;
   bool _isLoadingInterstitial = false;
@@ -189,16 +190,30 @@ class AdService {
     );
   }
 
-  /// Show Interstitial Ad after PDF operations
+  /// Show Interstitial Ad after PDF operations (shows after EVERY operation)
   void showInterstitialAfterOperation() {
     // Skip if premium user
     if (_isPremium) return;
     
     _operationCount++;
-    debugPrint('Operation count: $_operationCount/$_adsInterval (interstitial ready: ${_interstitialAd != null})');
+    debugPrint('Operation completed: $_operationCount (showing interstitial)');
     
-    if (_operationCount >= _adsInterval) {
-      _operationCount = 0;
+    // Show interstitial after every completed operation
+    // Also reset feature visit counter since user completed a task
+    _featureVisitCount = 0;
+    showInterstitialAd();
+  }
+  
+  /// Track feature screen visits (shows interstitial after 3 visits)
+  void onFeatureVisit() {
+    // Skip if premium user
+    if (_isPremium) return;
+    
+    _featureVisitCount++;
+    debugPrint('Feature visit count: $_featureVisitCount/$_featureVisitInterval (interstitial ready: ${_interstitialAd != null})');
+    
+    if (_featureVisitCount >= _featureVisitInterval) {
+      _featureVisitCount = 0;
       showInterstitialAd();
     } else if (_interstitialAd == null) {
       // Preload if not ready
