@@ -33,8 +33,35 @@
    *** get*();
 }
 
-# Keep classes that are accessed via reflection
+# GSON - Comprehensive rules to prevent TypeToken reflection crashes
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
+
+# Gson uses generic type information stored in a class file when working with fields.
+# R8 removes such information by default, so configure it to keep all of it.
 -keep class com.google.gson.** { *; }
+
+# Prevent R8 from leaving Data object members always null
+-keepclassmembers,allowobfuscation class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Prevent stripping interface information from TypeAdapter, TypeAdapterFactory,
+# JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
+-keep class * extends com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
+# TypeToken uses reflection to access generic type info at runtime
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# Keep generic signatures for TypeToken
+-keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations
+
 -keep class org.apache.http.** { *; }
 
 # Keep common Android classes
