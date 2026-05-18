@@ -11,7 +11,6 @@ import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
 import 'package:ilovepdf_flutter/services/ad_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:printing/printing.dart';
 
 class AddPageNumbersPage extends StatefulWidget {
@@ -283,7 +282,7 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
                             const SizedBox(height: 4),
                             Text(
                               'Number your PDF pages',
-                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                             ),
                           ],
                         ),
@@ -291,7 +290,7 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(Icons.format_list_numbered, color: Colors.white, size: 32 * scale),
@@ -337,10 +336,10 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.95),
+                                      color: Colors.white.withValues(alpha: 0.95),
                                       borderRadius: BorderRadius.circular(4),
                                       border: Border.all(color: const Color(0xFF4A80F0), width: 2),
-                                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                                     ),
                                     child: Text(
                                       _getFormatPreview(),
@@ -494,7 +493,7 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
                                 Switch(
                                   value: _bold,
                                   onChanged: (v) => setState(() => _bold = v),
-                                  activeColor: const Color(0xFF4A80F0),
+                                  activeThumbColor: const Color(0xFF4A80F0),
                                 ),
                               ],
                             ),
@@ -567,7 +566,7 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.green.withOpacity(0.15)
+                            ? Colors.green.withValues(alpha: 0.15)
                             : Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green),
@@ -653,7 +652,7 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF4A80F0) : (isDark ? const Color(0xFF3E3E3E) : Colors.grey[200]),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withOpacity(0.3), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withValues(alpha: 0.3), blurRadius: 8)] : [],
         ),
         child: Text(
           label,
@@ -707,10 +706,11 @@ class _AddPageNumbersPageState extends State<AddPageNumbersPage> {
             color: isSelected ? const Color(0xFF4A80F0) : Colors.transparent,
             width: 3,
           ),
-          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8)] : [],
         ),
         child: isSelected ? Icon(Icons.check, color: color == Colors.black ? Colors.white : Colors.white, size: 20) : null,
       ),
     );
   }
 }
+

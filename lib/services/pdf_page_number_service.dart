@@ -74,9 +74,9 @@ class PdfPageNumbering {
 
         // Create brush
         final brush = PdfSolidBrush(PdfColor(
-          color.red,
-          color.green,
-          color.blue,
+          (color.r * 255.0).round().clamp(0, 255),
+          (color.g * 255.0).round().clamp(0, 255),
+          (color.b * 255.0).round().clamp(0, 255),
         ));
 
         // Calculate position
@@ -259,7 +259,7 @@ class PdfPageNumbering {
         // Scale up font size for better visibility
         final scaledFontSize = fontSize * 1.5;
         final font = PdfStandardFont(PdfFontFamily.helvetica, scaledFontSize);
-        final brush = PdfSolidBrush(PdfColor(color.red, color.green, color.blue));
+        final brush = PdfSolidBrush(PdfColor((color.r * 255.0).round().clamp(0, 255), (color.g * 255.0).round().clamp(0, 255), (color.b * 255.0).round().clamp(0, 255)));
 
         // Odd pages: bottom left, Even pages: bottom right
         final isOddPage = (i + 1) % 2 == 1;
@@ -340,7 +340,7 @@ class PdfPageNumbering {
         // Scale up font size for better visibility
         final scaledFontSize = fontSize * 1.5;
         final font = PdfStandardFont(PdfFontFamily.helvetica, scaledFontSize);
-        final brush = PdfSolidBrush(PdfColor(color.red, color.green, color.blue));
+        final brush = PdfSolidBrush(PdfColor((color.r * 255.0).round().clamp(0, 255), (color.g * 255.0).round().clamp(0, 255), (color.b * 255.0).round().clamp(0, 255)));
 
         final pos = _calculatePosition(
           position,

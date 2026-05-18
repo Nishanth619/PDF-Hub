@@ -14,7 +14,6 @@ import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
 import 'package:ilovepdf_flutter/services/ad_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 
 class OcrScreen extends StatefulWidget {
   const OcrScreen({super.key});
@@ -31,8 +30,8 @@ class _OcrScreenState extends State<OcrScreen> {
   String _extractMode = 'balanced';
   List<int> _selectedPages = [];
   TextRecognitionScript _script = TextRecognitionScript.latin;
-  bool _enhanceImage = false;
-  int _dpi = 150;
+  final bool _enhanceImage = false;
+  final int _dpi = 150;
   String? _savedFilePath;
 
   Future<void> _pickFile() async {
@@ -272,7 +271,7 @@ class _OcrScreenState extends State<OcrScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Extract text from scanned PDFs',
-                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                             ),
                           ],
                         ),
@@ -280,7 +279,7 @@ class _OcrScreenState extends State<OcrScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(Icons.document_scanner, color: Colors.white, size: 32 * scale),
@@ -308,7 +307,7 @@ class _OcrScreenState extends State<OcrScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF4A80F0).withOpacity(0.35),
+                              color: const Color(0xFF4A80F0).withValues(alpha: 0.35),
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -321,7 +320,7 @@ class _OcrScreenState extends State<OcrScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: const Icon(Icons.document_scanner,
@@ -344,7 +343,7 @@ class _OcrScreenState extends State<OcrScreen> {
                                     Text(
                                       'Point at any text — books, signs, docs',
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withValues(alpha: 0.8),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -463,7 +462,9 @@ class _OcrScreenState extends State<OcrScreen> {
                                       final start = int.tryParse(range[0].trim());
                                       final end = int.tryParse(range[1].trim());
                                       if (start != null && end != null) {
-                                        for (int i = start; i <= end; i++) pages.add(i);
+                                        for (int i = start; i <= end; i++) {
+                                          pages.add(i);
+                                        }
                                       }
                                     }
                                   } else {
@@ -550,7 +551,7 @@ class _OcrScreenState extends State<OcrScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.green.withOpacity(0.15)
+                          ? Colors.green.withValues(alpha: 0.15)
                           : Colors.green.shade50,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.green),
@@ -659,7 +660,7 @@ class _OcrScreenState extends State<OcrScreen> {
         decoration: BoxDecoration(
           color: isSelected ? color : (isDark ? const Color(0xFF2E2E2E) : Colors.grey[200]),
           borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8)] : [],
         ),
         child: Column(
           children: [

@@ -51,7 +51,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFF4A80F0).withOpacity(0.3),
+                    color: const Color(0xFF4A80F0).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -60,7 +60,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4A80F0).withOpacity(0.2),
+                        color: const Color(0xFF4A80F0).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -204,8 +204,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isDark 
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.white.withOpacity(0.1),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -245,8 +245,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark 
-            ? Colors.white.withOpacity(0.05)
-            : Colors.white.withOpacity(0.08),
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Text(
@@ -283,8 +283,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isDark 
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.white.withOpacity(0.08),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -323,11 +323,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: isDark 
-                  ? Colors.white.withOpacity(0.03)
-                  : Colors.white.withOpacity(0.06),
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: const Color(0xFF4A80F0).withOpacity(0.1),
+                color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
               ),
             ),
             child: Text(
@@ -345,3 +345,4 @@ class PrivacyPolicyScreen extends StatelessWidget {
     );
   }
 }
+

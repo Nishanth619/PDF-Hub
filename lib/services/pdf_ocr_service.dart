@@ -1,15 +1,11 @@
 import 'package:universal_io/io.dart';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:image/image.dart' as img;
 import 'dart:async';
-import 'dart:isolate';
 import 'package:flutter/foundation.dart' show compute;
 
 /// Powerful PDF OCR Text Extractor for Flutter
@@ -155,7 +151,7 @@ class PdfOcrExtractor {
 
       // Clean up text recognizer safely
       try {
-        await textRecognizer?.close();
+        await textRecognizer.close();
       } catch (e) {
         print('Error closing text recognizer: $e');
       }
@@ -816,7 +812,7 @@ class _PdfOcrWidgetState extends State<PdfOcrWidget> {
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                             ),
-                            child: Text('Search'),
+                            child: const Text('Search'),
                           ),
                         ],
                       ),

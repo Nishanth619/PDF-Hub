@@ -3,15 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf_pdf;
 import 'package:ilovepdf_flutter/services/pdf_converter_service.dart';
 import 'package:ilovepdf_flutter/utils/history_utils.dart';
 import 'package:ilovepdf_flutter/utils/responsive_utils.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
@@ -219,10 +216,8 @@ class _ConvertScreenState extends State<ConvertScreen> {
             break;
         }
         
-        if (outputPath != null) {
-          allOutputPaths.add(outputPath);
-        }
-      }
+        allOutputPaths.add(outputPath);
+            }
 
       setState(() {
         _isConverting = false;
@@ -469,7 +464,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withOpacity(0.3),
+              color: gradientColors[0].withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -494,10 +489,10 @@ class _ConvertScreenState extends State<ConvertScreen> {
                 padding: EdgeInsets.all((isLarge ? 10 : 8) * scale),
                 decoration: BoxDecoration(
                   color: isSelected 
-                      ? Colors.white.withOpacity(0.2) 
+                      ? Colors.white.withValues(alpha: 0.2) 
                       : (Theme.of(context).brightness == Brightness.dark
-                          ? conversionType['color'].withOpacity(0.2)
-                          : conversionType['color'].withOpacity(0.1)),
+                          ? conversionType['color'].withValues(alpha: 0.2)
+                          : conversionType['color'].withValues(alpha: 0.1)),
                   borderRadius: BorderRadius.circular(10 * scale),
                 ),
                 child: Icon(
@@ -597,7 +592,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2E3A59).withOpacity(0.4),
+                      color: const Color(0xFF2E3A59).withValues(alpha: 0.4),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -639,7 +634,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4A80F0).withOpacity(0.2),
+                        color: const Color(0xFF4A80F0).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
@@ -717,7 +712,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4A80F0).withOpacity(0.1),
+                              color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -773,7 +768,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF43A047).withOpacity(0.1),
+                              color: const Color(0xFF43A047).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: const Color(0xFF43A047)),
                             ),
@@ -798,7 +793,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                             decoration: BoxDecoration(
                               color: Theme.of(context).brightness == Brightness.dark
                                   ? const Color(0xFF2E3A59)
-                                  : const Color(0xFF4A80F0).withOpacity(0.1),
+                                  : const Color(0xFF4A80F0).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -874,7 +869,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                         ? const Color(0xFF1E1E1E)
                         : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF4A80F0).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF4A80F0).withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -903,7 +898,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                                 decoration: BoxDecoration(
                                   color: isSelected ? const Color(0xFF4A80F0) : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: isSelected ? const Color(0xFF4A80F0) : Colors.grey.withOpacity(0.3)),
+                                  border: Border.all(color: isSelected ? const Color(0xFF4A80F0) : Colors.grey.withValues(alpha: 0.3)),
                                 ),
                                 child: Text(label, textAlign: TextAlign.center, style: TextStyle(
                                   fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w500,
@@ -1002,7 +997,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Card(
-                    color: const Color(0xFF43A047).withOpacity(0.1),
+                    color: const Color(0xFF43A047).withValues(alpha: 0.1),
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -1157,7 +1152,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
                                   decoration: BoxDecoration(
                                     color: Theme.of(context).brightness == Brightness.dark
                                         ? const Color(0xFF2E2E2E)
-                                        : Colors.white.withOpacity(0.7),
+                                        : Colors.white.withValues(alpha: 0.7),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(

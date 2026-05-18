@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class MockPremiumService with ChangeNotifier {
   bool _isAvailable = false;
   bool _isPremium = false;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _errorMessage;
 
   bool get isAvailable => _isAvailable;

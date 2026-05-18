@@ -1,6 +1,5 @@
 import 'package:universal_io/io.dart';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -77,9 +76,9 @@ class PdfWatermark {
         
         // Create brush
         final brush = PdfSolidBrush(PdfColor(
-          color.red,
-          color.green,
-          color.blue,
+          (color.r * 255.0).round().clamp(0, 255),
+          (color.g * 255.0).round().clamp(0, 255),
+          (color.b * 255.0).round().clamp(0, 255),
         ));
         
         // Draw text
@@ -275,9 +274,9 @@ class PdfWatermark {
         
         final font = PdfStandardFont(PdfFontFamily.helvetica, fontSize);
         final brush = PdfSolidBrush(PdfColor(
-          color.red,
-          color.green,
-          color.blue,
+          (color.r * 255.0).round().clamp(0, 255),
+          (color.g * 255.0).round().clamp(0, 255),
+          (color.b * 255.0).round().clamp(0, 255),
         ));
         
         graphics.drawString(
@@ -373,9 +372,9 @@ class PdfWatermark {
         
         final font = PdfStandardFont(PdfFontFamily.helvetica, fontSize);
         final brush = PdfSolidBrush(PdfColor(
-          color.red,
-          color.green,
-          color.blue,
+          (color.r * 255.0).round().clamp(0, 255),
+          (color.g * 255.0).round().clamp(0, 255),
+          (color.b * 255.0).round().clamp(0, 255),
         ));
         
         // Create tiled pattern

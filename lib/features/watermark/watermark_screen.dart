@@ -11,7 +11,6 @@ import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
 import 'package:ilovepdf_flutter/services/ad_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:printing/printing.dart';
 
 class AddWatermarkScreen extends StatefulWidget {
@@ -311,7 +310,7 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Protect your documents with watermarks',
-                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                             ),
                           ],
                         ),
@@ -319,7 +318,7 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(Icons.water_drop, color: Colors.white, size: 32 * scale),
@@ -361,7 +360,7 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF4A80F0).withOpacity(0.1),
+                                color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -733,7 +732,7 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.green.withOpacity(0.15)
+                            ? Colors.green.withValues(alpha: 0.15)
                             : Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green),
@@ -841,7 +840,7 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
           color: isSelected ? const Color(0xFF4A80F0) : (isDark ? const Color(0xFF2E2E2E) : Colors.white),
           borderRadius: BorderRadius.circular(12 * scale),
           border: Border.all(color: isSelected ? const Color(0xFF4A80F0) : (isDark ? Colors.grey.shade600 : Colors.grey.shade300)),
-          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withOpacity(0.3), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withValues(alpha: 0.3), blurRadius: 8)] : [],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -947,7 +946,7 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
             color: isSelected ? const Color(0xFF4A80F0) : Colors.transparent,
             width: 3,
           ),
-          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8)] : [],
         ),
         child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
       ),
@@ -974,3 +973,4 @@ class _AddWatermarkScreenState extends State<AddWatermarkScreen> {
     );
   }
 }
+

@@ -1,5 +1,4 @@
 import 'package:universal_io/io.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -85,7 +84,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final baseName = _fileName?.replaceAll('.pdf', '') ?? 'form';
       final suffix = flatten ? '_filled_final' : '_filled';
-      final outputFileName = '${baseName}${suffix}_$timestamp.pdf';
+      final outputFileName = '$baseName${suffix}_$timestamp.pdf';
 
       // Save to documents directory
       final documentsDir = await getApplicationDocumentsDirectory();
@@ -180,7 +179,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.edit_document, color: Colors.blue),
@@ -197,7 +196,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.lock, color: Colors.orange),
@@ -275,7 +274,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2E3A59).withOpacity(0.4),
+                  color: const Color(0xFF2E3A59).withValues(alpha: 0.4),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
@@ -319,7 +318,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A80F0).withOpacity(0.2),
+                    color: const Color(0xFF4A80F0).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
@@ -565,8 +564,9 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
           ),
         ),
 
-        // Bottom action bar\r\n        if (_savedFilePath != null)\r\n          Container(\r\n            padding: const EdgeInsets.all(16),\r\n            decoration: BoxDecoration(\r\n              color: Theme.of(context).brightness == Brightness.dark\r\n                  ? Colors.green.withOpacity(0.15)\r\n                  : Colors.green.shade50,\r\n              border: Border(\r\n                top: BorderSide(\r\n                  color: Theme.of(context).brightness == Brightness.dark\r\n                      ? Colors.green.withOpacity(0.5)\r\n                      : Colors.green.shade200,\r\n                ),\r\n              ),\r\n            ),\r\n            child: Row(\r\n              children: [\r\n                Icon(Icons.check_circle, \r\n                  color: Theme.of(context).brightness == Brightness.dark\r\n                      ? Colors.green\r\n                      : Colors.green.shade700,\r\n                ),\r\n                const SizedBox(width: 8),\r\n                Expanded(\r\n                  child: Text(\r\n                    'Form saved!',\r\n                    style: TextStyle(\r\n                      color: Theme.of(context).brightness == Brightness.dark\r\n                          ? Colors.white\r\n                          : Colors.green.shade700,\r\n                      fontWeight: FontWeight.w500,\r\n                    ),\r\n                  ),\r\n                ),\r\n                TextButton.icon(\r\n                  onPressed: _openSavedPdf,\r\n                  icon: const Icon(Icons.open_in_new, size: 18),\r\n                  label: const Text('Open'),\r\n                ),\r\n              ],\r\n            ),\r\n          ),
+        // Bottom action bar\r\n        if (_savedFilePath != null)\r\n          Container(\r\n            padding: const EdgeInsets.all(16),\r\n            decoration: BoxDecoration(\r\n              color: Theme.of(context).brightness == Brightness.dark\r\n                  ? Colors.green.withValues(alpha: 0.15)\r\n                  : Colors.green.shade50,\r\n              border: Border(\r\n                top: BorderSide(\r\n                  color: Theme.of(context).brightness == Brightness.dark\r\n                      ? Colors.green.withValues(alpha: 0.5)\r\n                      : Colors.green.shade200,\r\n                ),\r\n              ),\r\n            ),\r\n            child: Row(\r\n              children: [\r\n                Icon(Icons.check_circle, \r\n                  color: Theme.of(context).brightness == Brightness.dark\r\n                      ? Colors.green\r\n                      : Colors.green.shade700,\r\n                ),\r\n                const SizedBox(width: 8),\r\n                Expanded(\r\n                  child: Text(\r\n                    'Form saved!',\r\n                    style: TextStyle(\r\n                      color: Theme.of(context).brightness == Brightness.dark\r\n                          ? Colors.white\r\n                          : Colors.green.shade700,\r\n                      fontWeight: FontWeight.w500,\r\n                    ),\r\n                  ),\r\n                ),\r\n                TextButton.icon(\r\n                  onPressed: _openSavedPdf,\r\n                  icon: const Icon(Icons.open_in_new, size: 18),\r\n                  label: const Text('Open'),\r\n                ),\r\n              ],\r\n            ),\r\n          ),
       ],
     );
   }
 }
+

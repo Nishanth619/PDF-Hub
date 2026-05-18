@@ -170,7 +170,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                   center: const Alignment(0.0, -0.5),
                   radius: 1.5,
                   colors: [
-                    Colors.white.withOpacity(0.1),
+                    Colors.white.withValues(alpha: 0.1),
                     Colors.transparent,
                   ],
                 ),
@@ -195,7 +195,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           borderRadius: BorderRadius.circular(40 * scale),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.4),
+                              color: Colors.black.withValues(alpha: 0.4),
                               blurRadius: 40 * scale,
                               offset: Offset(0, 15 * scale),
                             ),
@@ -324,15 +324,15 @@ class PDFHubPainter extends CustomPainter {
 
     // Draw nodes
     if (topNodeOpacity > 0) {
-      nodePaint.color = Colors.white.withOpacity(topNodeOpacity);
+      nodePaint.color = Colors.white.withValues(alpha: topNodeOpacity);
       canvas.drawCircle(topNode, 21.43 * scale, nodePaint);
     }
     if (leftNodeOpacity > 0) {
-      nodePaint.color = Colors.white.withOpacity(leftNodeOpacity);
+      nodePaint.color = Colors.white.withValues(alpha: leftNodeOpacity);
       canvas.drawCircle(leftNode, 21.43 * scale, nodePaint);
     }
     if (rightNodeOpacity > 0) {
-      nodePaint.color = Colors.white.withOpacity(rightNodeOpacity);
+      nodePaint.color = Colors.white.withValues(alpha: rightNodeOpacity);
       canvas.drawCircle(rightNode, 21.43 * scale, nodePaint);
     }
 

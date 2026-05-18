@@ -1,6 +1,5 @@
 import 'package:universal_io/io.dart';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -43,7 +42,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
   Color _annotationColor = Colors.red;
   double _strokeWidth = 3.0;
   
-  Map<int, List<Annotation>> _pageAnnotations = {};
+  final Map<int, List<Annotation>> _pageAnnotations = {};
   
   // For freehand drawing
   Annotation? _currentDrawing;
@@ -51,8 +50,8 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
   // Pending annotation (shape/text) waiting for position confirmation
   Annotation? _pendingAnnotation;
   
-  List<UndoAction> _undoStack = [];
-  List<UndoAction> _redoStack = [];
+  final List<UndoAction> _undoStack = [];
+  final List<UndoAction> _redoStack = [];
 
   @override
   void dispose() {
@@ -327,7 +326,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
           child: Container(
             width: handleSize,
             height: handleSize,
-            decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+            decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
             child: const Icon(Icons.rotate_right, size: 12, color: Colors.white),
           ),
         ),
@@ -408,7 +407,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
     if (result != null && result.isNotEmpty) {
       // Calculate text box size based on text length
       final textWidth = math.max(100.0, result.length * 10.0);
-      final textHeight = 40.0;
+      const textHeight = 40.0;
       final clampedEnd = Offset(
         (pos.dx + textWidth).clamp(0, _displaySize.width),
         (pos.dy + textHeight).clamp(0, _displaySize.height),
@@ -463,8 +462,8 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
           final scaleY = page.size.height / _displaySize.height;
           
           for (final a in entry.value) {
-            final pen = sf_pdf.PdfPen(sf_pdf.PdfColor(a.color.red, a.color.green, a.color.blue), width: a.strokeWidth * scaleX);
-            final brush = sf_pdf.PdfSolidBrush(sf_pdf.PdfColor(a.color.red, a.color.green, a.color.blue));
+            final pen = sf_pdf.PdfPen(sf_pdf.PdfColor(a.(color.r * 255.0).round().clamp(0, 255), a.(color.g * 255.0).round().clamp(0, 255), a.(color.b * 255.0).round().clamp(0, 255)), width: a.strokeWidth * scaleX);
+            final brush = sf_pdf.PdfSolidBrush(sf_pdf.PdfColor(a.(color.r * 255.0).round().clamp(0, 255), a.(color.g * 255.0).round().clamp(0, 255), a.(color.b * 255.0).round().clamp(0, 255)));
             
             // Apply rotation for shapes (not freehand)
             if (a.rotation != 0 && a.type != AnnotationTool.draw) {
@@ -729,7 +728,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
 
   Widget _buildFeature(IconData icon, String label, Color color) {
     return Column(children: [
-      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 20)),
+      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.2), shape: BoxShape.circle), child: Icon(icon, color: color, size: 20)),
       const SizedBox(height: 4),
       Text(label, style: const TextStyle(fontSize: 10)),
     ]);
@@ -756,7 +755,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
         if (_pendingAnnotation == null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            decoration: BoxDecoration(color: Theme.of(context).cardColor, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)]),
+            decoration: BoxDecoration(color: Theme.of(context).cardColor, boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)]),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -783,7 +782,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
         if (_pendingAnnotation != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(color: _annotationColor.withOpacity(0.1), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 2)]),
+            decoration: BoxDecoration(color: _annotationColor.withValues(alpha: 0.1), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)]),
             child: Row(
               children: [
                 const Icon(Icons.open_with, size: 20),
@@ -823,7 +822,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
                       child: Container(
                         width: displayWidth,
                         height: displayHeight,
-                        decoration: BoxDecoration(boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8, offset: const Offset(0, 4))]),
+                        decoration: const BoxDecoration(boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))]),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: GestureDetector(
@@ -855,7 +854,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(8),
-            color: _annotationColor.withOpacity(0.1),
+            color: _annotationColor.withValues(alpha: 0.1),
             child: Text(
               _currentTool == AnnotationTool.draw ? 'Draw on page' : _currentTool == AnnotationTool.text ? 'Tap to add text' : 'Select a shape from menu',
               textAlign: TextAlign.center,
@@ -867,7 +866,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.green.withOpacity(0.15)
+                ? Colors.green.withValues(alpha: 0.15)
                 : Colors.green.shade50,
             child: Row(children: [
               Icon(Icons.check_circle,
@@ -900,7 +899,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? _annotationColor.withOpacity(0.2) : null,
+          color: isActive ? _annotationColor.withValues(alpha: 0.2) : null,
           borderRadius: BorderRadius.circular(8),
           border: isActive ? Border.all(color: _annotationColor, width: 2) : null,
         ),
@@ -919,7 +918,7 @@ class _AnnotateScreenState extends State<AnnotateScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: isShapeActive ? _annotationColor.withOpacity(0.2) : null,
+          color: isShapeActive ? _annotationColor.withValues(alpha: 0.2) : null,
           borderRadius: BorderRadius.circular(8),
           border: isShapeActive ? Border.all(color: _annotationColor, width: 2) : null,
         ),
@@ -979,7 +978,9 @@ class AnnotationPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final a in annotations) _draw(canvas, a);
+    for (final a in annotations) {
+      _draw(canvas, a);
+    }
     if (currentDrawing != null) _draw(canvas, currentDrawing!);
   }
 
@@ -1000,7 +1001,9 @@ class AnnotationPainter extends CustomPainter {
       case AnnotationTool.draw:
         if (a.points.length < 2) return;
         final path = ui.Path()..moveTo(a.points.first.dx, a.points.first.dy);
-        for (int i = 1; i < a.points.length; i++) path.lineTo(a.points[i].dx, a.points[i].dy);
+        for (int i = 1; i < a.points.length; i++) {
+          path.lineTo(a.points[i].dx, a.points[i].dy);
+        }
         canvas.drawPath(path, paint);
         break;
       case AnnotationTool.text:
@@ -1084,3 +1087,5 @@ class PendingAnnotationPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+

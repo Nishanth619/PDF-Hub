@@ -97,7 +97,7 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
             ),
             boxShadow: [
               BoxShadow(
-                color: gradientColors.first.withOpacity(_isPressed ? 0.5 : 0.35),
+                color: gradientColors.first.withValues(alpha: _isPressed ? 0.5 : 0.35),
                 blurRadius: _isPressed ? 18 : 14,
                 offset: Offset(0, _isPressed ? 8 : 6),
                 spreadRadius: _isPressed ? 2 : 0,
@@ -118,8 +118,8 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withOpacity(0.15),
-                            Colors.white.withOpacity(0.05),
+                            Colors.white.withValues(alpha: 0.15),
+                            Colors.white.withValues(alpha: 0.05),
                           ],
                         ),
                       ),
@@ -133,7 +133,7 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                   child: Icon(
                     _getToolIcon(widget.tool.id),
                     size: 75,
-                    color: Colors.white.withOpacity(0.12),
+                    color: Colors.white.withValues(alpha: 0.12),
                   ),
                 ),
                 // Shine effect
@@ -147,7 +147,7 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.white.withOpacity(0.2),
+                          Colors.white.withValues(alpha: 0.2),
                           Colors.transparent,
                         ],
                       ),
@@ -166,7 +166,7 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -194,15 +194,15 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                       Container(
                         padding: EdgeInsets.all(iconContainerPadding),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.22),
+                          color: Colors.white.withValues(alpha: 0.22),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               blurRadius: 10,
                               spreadRadius: 2,
                             ),
@@ -227,7 +227,7 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                           letterSpacing: 0.3,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.25),
+                              color: Colors.black.withValues(alpha: 0.25),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -242,7 +242,7 @@ class _ToolCardState extends State<ToolCard> with SingleTickerProviderStateMixin
                         widget.tool.description,
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: descSize,
                           fontWeight: FontWeight.w400,
                           height: 1.25,

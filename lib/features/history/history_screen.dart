@@ -7,7 +7,6 @@ import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/utils/responsive_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -95,7 +94,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.history, color: Colors.white, size: 28 * scale),
@@ -111,7 +110,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             Text(
                               '${tools.length} tools used',
-                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                             ),
                           ],
                         ),
@@ -292,7 +291,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -311,7 +310,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: toolColor.withOpacity(0.1),
+                      color: toolColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(toolIcon, color: toolColor, size: 24 * scale),
@@ -334,7 +333,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: toolColor.withOpacity(0.1),
+                                color: toolColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -496,3 +495,4 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 }
+

@@ -1,5 +1,4 @@
 import 'package:universal_io/io.dart';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 import 'package:flutter/material.dart';
@@ -311,7 +310,7 @@ class _CompressScreenState extends State<CompressScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Reduce file size while maintaining quality',
-                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                             ),
                           ],
                         ),
@@ -319,7 +318,7 @@ class _CompressScreenState extends State<CompressScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(Icons.compress, color: Colors.white, size: 32 * scale),
@@ -368,7 +367,7 @@ class _CompressScreenState extends State<CompressScreen> {
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF4A80F0).withOpacity(0.1),
+                                color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Column(
@@ -590,7 +589,7 @@ class _CompressScreenState extends State<CompressScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.green.withOpacity(0.15)
+                            ? Colors.green.withValues(alpha: 0.15)
                             : Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.green),
@@ -675,7 +674,7 @@ class _CompressScreenState extends State<CompressScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: isSelected 
-              ? color.withOpacity(0.15) 
+              ? color.withValues(alpha: 0.15) 
               : (Theme.of(context).brightness == Brightness.dark
                   ? const Color(0xFF2E2E2E)
                   : Colors.white),
@@ -687,7 +686,7 @@ class _CompressScreenState extends State<CompressScreen> {
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected ? [
-            BoxShadow(color: color.withOpacity(0.3), blurRadius: 8)
+            BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8)
           ] : [],
         ),
         child: Column(
@@ -697,7 +696,7 @@ class _CompressScreenState extends State<CompressScreen> {
             Container(
               padding: EdgeInsets.all((isLarge ? 12 : 10) * scale),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: (isLarge ? 32 : 26) * scale),
@@ -748,3 +747,4 @@ class _CompressScreenState extends State<CompressScreen> {
     );
   }
 }
+

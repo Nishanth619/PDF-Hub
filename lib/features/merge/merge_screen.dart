@@ -1,5 +1,4 @@
 import 'package:universal_io/io.dart';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 import 'package:flutter/material.dart';
@@ -289,7 +288,7 @@ class _MergeScreenState extends State<MergeScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 4 * scale),
       decoration: BoxDecoration(
-        color: const Color(0xFF4A80F0).withOpacity(0.1),
+        color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12 * scale),
       ),
       child: Row(
@@ -344,7 +343,7 @@ class _MergeScreenState extends State<MergeScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2E3A59).withOpacity(0.4),
+                      color: const Color(0xFF2E3A59).withValues(alpha: 0.4),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -397,7 +396,7 @@ class _MergeScreenState extends State<MergeScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4A80F0).withOpacity(0.2),
+                        color: const Color(0xFF4A80F0).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -551,7 +550,7 @@ class _MergeScreenState extends State<MergeScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4A80F0).withOpacity(0.1),
+                      color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -632,7 +631,7 @@ class _MergeScreenState extends State<MergeScreen> {
                                         height: 65,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                                          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                                         ),
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(7),
@@ -777,7 +776,7 @@ class _MergeScreenState extends State<MergeScreen> {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Card(
-                      color: const Color(0xFF43A047).withOpacity(0.1),
+                      color: const Color(0xFF43A047).withValues(alpha: 0.1),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -916,7 +915,7 @@ class _MergeScreenState extends State<MergeScreen> {
                               decoration: BoxDecoration(
                                 color: Theme.of(context).brightness == Brightness.dark
                                     ? const Color(0xFF2E2E2E)
-                                    : Colors.white.withOpacity(0.7),
+                                    : Colors.white.withValues(alpha: 0.7),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(

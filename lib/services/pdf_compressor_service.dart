@@ -961,7 +961,7 @@ class _PdfCompressorWidgetState extends State<PdfCompressorWidget> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey[50],
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey[50],
           border: Border.all(
             color: isSelected ? color : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
@@ -1020,3 +1020,4 @@ class _PdfCompressorWidgetState extends State<PdfCompressorWidget> {
     );
   }
 }
+

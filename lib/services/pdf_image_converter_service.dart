@@ -7,7 +7,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 /// Parameters for process image isolate
 _ProcessImageResult _processImageIsolate(_ProcessImageParams params) {
@@ -210,7 +209,7 @@ class ImageToPdfConverter {
           ));
 
           successCount++;
-        } catch (e, stackTrace) {
+        } catch (e) {
           print('Failed to process image $i: $e');
           failedCount++;
         }
@@ -232,7 +231,7 @@ class ImageToPdfConverter {
         failedCount: failedCount,
         outputBytes: pdfBytes,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('PDF conversion failed: $e');
       // Clean up any resources
       processedImages.clear();

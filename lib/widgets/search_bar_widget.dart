@@ -82,7 +82,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.08)
+              ? Colors.white.withValues(alpha: 0.08)
               : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -94,8 +94,8 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
           boxShadow: [
             BoxShadow(
               color: _isFocused
-                  ? const Color(0xFF4A80F0).withOpacity(0.2)
-                  : Colors.black.withOpacity(0.05),
+                  ? const Color(0xFF4A80F0).withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: _isFocused ? 12 : 8,
               offset: const Offset(0, 4),
             ),
@@ -154,3 +154,4 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
     );
   }
 }
+

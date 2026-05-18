@@ -1,5 +1,4 @@
 import 'package:universal_io/io.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +6,6 @@ import 'package:ilovepdf_flutter/services/history_service.dart';
 import 'package:ilovepdf_flutter/models/history_item.dart';
 import 'package:open_file/open_file.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:pdfx/pdfx.dart';
 
 class RecentFilesWidget extends StatelessWidget {
@@ -79,7 +77,7 @@ class RecentFilesWidget extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.white12 : Colors.grey.shade200,
@@ -90,7 +88,7 @@ class RecentFilesWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF4A80F0).withOpacity(0.1),
+              color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -250,6 +248,7 @@ class _RecentFileCardState extends State<_RecentFileCard> {
         if (await File(widget.item.filePath).exists()) {
           OpenFile.open(widget.item.filePath);
         } else {
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('File not found')),
           );
@@ -261,14 +260,14 @@ class _RecentFileCardState extends State<_RecentFileCard> {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: widget.isDark ? Colors.white.withOpacity(0.08) : Colors.white,
+          color: widget.isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white,
           borderRadius: BorderRadius.circular(14),
          border: Border.all(
             color: widget.isDark ? Colors.white12 : Colors.grey.shade200,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -284,7 +283,7 @@ class _RecentFileCardState extends State<_RecentFileCard> {
                   width: 32,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _getToolColor().withOpacity(0.15),
+                    color: _getToolColor().withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: _loadingThumbnail
@@ -442,3 +441,4 @@ class _RecentFileCardState extends State<_RecentFileCard> {
     );
   }
 }
+

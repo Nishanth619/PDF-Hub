@@ -45,12 +45,12 @@ class CategoryTabsWidget extends StatelessWidget {
                       : null,
                   color: isSelected
                       ? null
-                      : (isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade100),
+                      : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF4A80F0).withOpacity(0.3),
+                            color: const Color(0xFF4A80F0).withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -78,3 +78,4 @@ class CategoryTabsWidget extends StatelessWidget {
     );
   }
 }
+

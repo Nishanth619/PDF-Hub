@@ -57,8 +57,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       boxShadow: [
                         BoxShadow(
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? AppTheme.darkHeaderBackground.withOpacity(0.4)
-                              : const Color(0xFF2E3A59).withOpacity(0.4),
+                              ? AppTheme.darkHeaderBackground.withValues(alpha: 0.4)
+                              : const Color(0xFF2E3A59).withValues(alpha: 0.4),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -116,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4A80F0).withOpacity(0.2),
+                            color: const Color(0xFF4A80F0).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
@@ -411,7 +411,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 BoxShadow(
                   color: (premium.isPremium 
                       ? const Color(0xFFFFD700) 
-                      : const Color(0xFF4A80F0)).withOpacity(0.3),
+                      : const Color(0xFF4A80F0)).withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -422,7 +422,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -455,7 +455,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -886,7 +886,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4A80F0).withOpacity(0.1),
+                  color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -973,3 +973,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+

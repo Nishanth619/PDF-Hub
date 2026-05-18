@@ -272,7 +272,7 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4A80F0).withOpacity(0.45),
+                      color: const Color(0xFF4A80F0).withValues(alpha: 0.45),
                       blurRadius: 32,
                       spreadRadius: 4,
                     ),
@@ -323,11 +323,11 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
             ),
             const SizedBox(height: 24),
             // Feature chips
-            Wrap(
+            const Wrap(
               spacing: 10,
               runSpacing: 10,
               alignment: WrapAlignment.center,
-              children: const [
+              children: [
                 _FeatureChip(icon: Icons.wifi_off, label: '100% Offline'),
                 _FeatureChip(icon: Icons.bolt, label: 'Instant OCR'),
                 _FeatureChip(icon: Icons.crop_rotate, label: 'Edge Detection'),
@@ -422,7 +422,7 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4A80F0).withOpacity(0.4),
+                      color: const Color(0xFF4A80F0).withValues(alpha: 0.4),
                       blurRadius: 24,
                     )
                   ],
@@ -474,8 +474,8 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
               colors: [Color(0xFF2E3A59), Color(0xFF1E2A49)],
             ),
           ),
@@ -546,7 +546,7 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
               color: isDark ? const Color(0xFF1A2035) : Colors.white,
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 8,
                     offset: const Offset(0, -2))
               ],
@@ -589,7 +589,7 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF4A80F0).withOpacity(0.15),
+            color: const Color(0xFF4A80F0).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: const Color(0xFF4A80F0), size: 22),
@@ -611,7 +611,7 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
+        color: Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.red.shade400),
       ),
@@ -656,7 +656,7 @@ class _CameraOcrScreenState extends State<CameraOcrScreen>
   }) {
     return Expanded(
       child: Material(
-        color: onTap != null ? color : color.withOpacity(0.4),
+        color: onTap != null ? color : color.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -699,10 +699,10 @@ class _FeatureChip extends StatelessWidget {
         color: isDark ? const Color(0xFF1A2035) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: const Color(0xFF4A80F0).withOpacity(0.5)),
+            color: const Color(0xFF4A80F0).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 4,
               offset: const Offset(0, 2)),
         ],
@@ -722,3 +722,4 @@ class _FeatureChip extends StatelessWidget {
     );
   }
 }
+

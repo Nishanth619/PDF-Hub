@@ -58,7 +58,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: const Icon(
@@ -99,7 +99,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.1),
+                              fillColor: Colors.white.withValues(alpha: 0.1),
                               labelText: 'Enter your name',
                               labelStyle: const TextStyle(color: Colors.white70),
                               border: OutlineInputBorder(
@@ -109,7 +109,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: Colors.white.withValues(alpha: 0.3),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(

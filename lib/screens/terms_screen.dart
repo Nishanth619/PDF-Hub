@@ -55,20 +55,20 @@ class _TermsScreenState extends State<TermsScreen> {
                   color: headerColor,
                   border: Border(
                     bottom: BorderSide(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.description,
                       color: Colors.white,
                       size: 28,
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -264,7 +264,7 @@ class _TermsScreenState extends State<TermsScreen> {
                   color: const Color(0xFF2E3A59),
                   border: Border(
                     top: BorderSide(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
@@ -370,8 +370,8 @@ class _TermsScreenState extends State<TermsScreen> {
   Widget _buildSectionContent(String content) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = widget.showButtons 
-        ? Colors.white.withOpacity(0.05) 
-        : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100);
+        ? Colors.white.withValues(alpha: 0.05) 
+        : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100);
     final textColor = widget.showButtons 
         ? const Color(0xFFC0D0E9) 
         : (isDark ? const Color(0xFFC0D0E9) : const Color(0xFF5A6A7A));
@@ -397,8 +397,8 @@ class _TermsScreenState extends State<TermsScreen> {
   Widget _buildBulletList(List<String> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = widget.showButtons 
-        ? Colors.white.withOpacity(0.03) 
-        : (isDark ? Colors.white.withOpacity(0.03) : Colors.grey.shade50);
+        ? Colors.white.withValues(alpha: 0.03) 
+        : (isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey.shade50);
     final textColor = widget.showButtons 
         ? const Color(0xFFB0C4DE) 
         : (isDark ? const Color(0xFFB0C4DE) : const Color(0xFF6A7A8A));

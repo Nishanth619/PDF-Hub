@@ -1,16 +1,12 @@
 import 'package:universal_io/io.dart' show Platform, File;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:ilovepdf_flutter/utils/history_utils.dart';
-import 'package:ilovepdf_flutter/utils/responsive_utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:pdf/pdf.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:ilovepdf_flutter/services/pdf_image_converter_service.dart';
@@ -27,7 +23,7 @@ class ImageToPdfScreen extends StatefulWidget {
 }
 
 class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
-  List<XFile> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
   bool _isConverting = false;
   double _progress = 0.0;
   PdfConversionResult? _conversionResult;
@@ -356,7 +352,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Convert images to PDF',
-                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                             ),
                           ],
                         ),
@@ -364,7 +360,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(Icons.image, color: Colors.white, size: 32),
@@ -598,7 +594,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                               Switch(
                                 value: _autoRotate,
                                 onChanged: (v) => setState(() => _autoRotate = v),
-                                activeColor: const Color(0xFF4A80F0),
+                                activeThumbColor: const Color(0xFF4A80F0),
                               ),
                             ],
                           ),
@@ -662,7 +658,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.green.withOpacity(0.15)
+                          ? Colors.green.withValues(alpha: 0.15)
                           : Colors.green.shade50,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.green),
@@ -785,7 +781,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF4A80F0) : (isDark ? const Color(0xFF2E2E2E) : Colors.grey[200]),
           borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withOpacity(0.3), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withValues(alpha: 0.3), blurRadius: 8)] : [],
         ),
         child: Column(
           children: [

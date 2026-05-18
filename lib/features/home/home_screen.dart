@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: Icon(
                             Icons.description,
                             size: 120,
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white.withValues(alpha: 0.05),
                           ),
                         ),
                         // Content
@@ -120,10 +120,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.18),
+                                  color: Colors.white.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             ? 'Welcome, ${settings.userName}!'
                                             : 'Your Complete PDF Toolkit',
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.85),
+                                          color: Colors.white.withValues(alpha: 0.85),
                                           fontSize: 11,
                                           fontFamily: 'Poppins',
                                         ),
@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.history_rounded, color: Colors.white, size: 18),
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.settings_rounded, color: Colors.white, size: 18),
@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4A80F0).withOpacity(0.1),
+                          color: const Color(0xFF4A80F0).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

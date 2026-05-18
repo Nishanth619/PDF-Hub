@@ -36,6 +36,7 @@ class HistoryUtils {
       );
       
       // Add to history service
+      if (!context.mounted) return;
       final historyService = Provider.of<HistoryService>(context, listen: false);
       await historyService.addHistoryItem(historyItem);
     } catch (e) {

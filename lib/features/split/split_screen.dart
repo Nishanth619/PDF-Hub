@@ -1,5 +1,4 @@
 import 'package:universal_io/io.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:file_picker/file_picker.dart';
@@ -7,7 +6,6 @@ import 'package:ilovepdf_flutter/services/pdf_merger_service.dart';
 import 'package:ilovepdf_flutter/utils/history_utils.dart';
 import 'package:ilovepdf_flutter/utils/responsive_utils.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
@@ -520,7 +518,7 @@ class _SplitScreenState extends State<SplitScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF2E3A59).withOpacity(0.4),
+                        color: const Color(0xFF2E3A59).withValues(alpha: 0.4),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -573,7 +571,7 @@ class _SplitScreenState extends State<SplitScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4A80F0).withOpacity(0.2),
+                          color: const Color(0xFF4A80F0).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(
@@ -653,7 +651,7 @@ class _SplitScreenState extends State<SplitScreen> {
                               decoration: BoxDecoration(
                                 color: Theme.of(context).brightness == Brightness.dark
                                     ? const Color(0xFF2E3A59)
-                                    : const Color(0xFF4A80F0).withOpacity(0.1),
+                                    : const Color(0xFF4A80F0).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -1100,7 +1098,7 @@ class _SplitScreenState extends State<SplitScreen> {
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Card(
-                        color: const Color(0xFF43A047).withOpacity(0.1),
+                        color: const Color(0xFF43A047).withValues(alpha: 0.1),
                         elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -1155,7 +1153,7 @@ class _SplitScreenState extends State<SplitScreen> {
                                     decoration: BoxDecoration(
                                       color: Theme.of(context).brightness == Brightness.dark
                                           ? const Color(0xFF2E3A59)
-                                          : const Color(0xFF4A80F0).withOpacity(0.1),
+                                          : const Color(0xFF4A80F0).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
@@ -1195,7 +1193,7 @@ class _SplitScreenState extends State<SplitScreen> {
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).brightness == Brightness.dark
                                       ? const Color(0xFF2E2E2E)
-                                      : Colors.white.withOpacity(0.7),
+                                      : Colors.white.withValues(alpha: 0.7),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Text(
@@ -1238,7 +1236,7 @@ class _SplitScreenState extends State<SplitScreen> {
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF4A80F0).withOpacity(0.1)
+              ? const Color(0xFF4A80F0).withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -1311,7 +1309,7 @@ class _SplitScreenState extends State<SplitScreen> {
           color: isSelected ? const Color(0xFF4A80F0) : Colors.white,
           borderRadius: BorderRadius.circular(12 * scale),
           border: Border.all(color: isSelected ? const Color(0xFF4A80F0) : Colors.grey.shade300),
-          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withOpacity(0.3), blurRadius: 8)] : [],
+          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4A80F0).withValues(alpha: 0.3), blurRadius: 8)] : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

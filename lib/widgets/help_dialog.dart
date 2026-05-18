@@ -33,7 +33,7 @@ class HelpDialog {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [help.color, help.color.withOpacity(0.8)],
+                          colors: [help.color, help.color.withValues(alpha: 0.8)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -44,7 +44,7 @@ class HelpDialog {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(help.icon, color: Colors.white, size: 28),
@@ -66,7 +66,7 @@ class HelpDialog {
                                 Text(
                                   'How to use',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -106,10 +106,10 @@ class HelpDialog {
                               Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.1),
+                                  color: Colors.amber.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: Colors.amber.withOpacity(0.3),
+                                    color: Colors.amber.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -119,7 +119,7 @@ class HelpDialog {
                                     Container(
                                       padding: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
-                                        color: Colors.amber.withOpacity(0.2),
+                                        color: Colors.amber.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(Icons.lightbulb, color: Colors.amber, size: 18),
@@ -200,12 +200,12 @@ class HelpDialog {
             height: 28,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.7)],
+                colors: [color, color.withValues(alpha: 0.7)],
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.3),
+                  color: color.withValues(alpha: 0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -423,3 +423,4 @@ class _HelpContent {
     required this.tips,
   });
 }
+
