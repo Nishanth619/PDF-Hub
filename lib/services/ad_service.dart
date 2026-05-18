@@ -1,9 +1,11 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:ilovepdf_flutter/services/premium_service.dart';
+import 'package:ilovepdf_flutter/services/rating_service.dart';
 
-class AdService {
+class AdService with WidgetsBindingObserver {
   static final AdService _instance = AdService._internal();
   factory AdService() => _instance;
   AdService._internal();
@@ -12,7 +14,8 @@ class AdService {
   InterstitialAd? _interstitialAd;
   int _operationCount = 0;
   int _featureVisitCount = 0;
-  static const int _featureVisitInterval = 3; // Show interstitial every 3 feature visits
+  // OPTIMIZED: Reduced from 3 to 2 for more impressions
+  static const int _featureVisitInterval = 2;
   int _interstitialRetryCount = 0;
   static const int _maxRetries = 3;
   bool _isLoadingInterstitial = false;
@@ -41,39 +44,43 @@ class AdService {
   /// Get preloaded banner ad
   BannerAd? get preloadedBannerAd => _isBannerLoaded ? _preloadedBannerAd : null;
 
-  // Test Ad Unit IDs (Replace with your real IDs for production)
+  // Ad Unit IDs
   static String get bannerAdUnitId {
-    if (kDebugMode) {
-      // Test IDs
+    // Use test IDs only for debug/profile builds, NEVER in release
+    if (!kReleaseMode) {
+      // Test IDs for development
       if (Platform.isAndroid) {
         return 'ca-app-pub-3940256099942544/6300978111';
       } else if (Platform.isIOS) {
         return 'ca-app-pub-3940256099942544/2934735716';
       }
     }
-    // Production IDs - Use environment variables for security
+    // PRODUCTION IDs - hardcoded for reliability
     if (Platform.isAndroid) {
-      return const String.fromEnvironment('BANNER_AD_ID', defaultValue: 'ca-app-pub-3940256099942544/6300978111');
+      return 'ca-app-pub-4025737666505759/4430302157';
     } else if (Platform.isIOS) {
-      return const String.fromEnvironment('BANNER_AD_ID_IOS', defaultValue: 'ca-app-pub-3940256099942544/2934735716');
+      // TODO: Add iOS production banner ad ID when available
+      return 'ca-app-pub-3940256099942544/2934735716';
     }
     return '';
   }
 
   static String get interstitialAdUnitId {
-    if (kDebugMode) {
-      // Test IDs
+    // Use test IDs only for debug/profile builds, NEVER in release
+    if (!kReleaseMode) {
+      // Test IDs for development
       if (Platform.isAndroid) {
         return 'ca-app-pub-3940256099942544/1033173712';
       } else if (Platform.isIOS) {
         return 'ca-app-pub-3940256099942544/4411468910';
       }
     }
-    // Production IDs - Use environment variables for security
+    // PRODUCTION IDs - hardcoded for reliability
     if (Platform.isAndroid) {
-      return const String.fromEnvironment('INTERSTITIAL_AD_ID', defaultValue: 'ca-app-pub-3940256099942544/1033173712');
+      return 'ca-app-pub-4025737666505759/2302832261';
     } else if (Platform.isIOS) {
-      return const String.fromEnvironment('INTERSTITIAL_AD_ID_IOS', defaultValue: 'ca-app-pub-3940256099942544/4411468910');
+      // TODO: Add iOS production interstitial ad ID when available
+      return 'ca-app-pub-3940256099942544/4411468910';
     }
     return '';
   }
@@ -87,14 +94,29 @@ class AdService {
       _isInitialized = true;
       debugPrint('AdMob initialized successfully');
       
-      // Pre-load ads immediately if not premium
+      // Register app lifecycle observer to reload ads when app resumes
+      WidgetsBinding.instance.addObserver(this);
+      
+      // Pre-load banner ads immediately if not premium
+      // NOTE: Interstitial ads are loaded on first feature visit for efficiency
       if (!_isPremium) {
-        // Start loading both ad types immediately
-        _loadInterstitialAd();
         _preloadBannerAd();
       }
     } catch (e) {
       debugPrint('Failed to initialize AdMob: $e');
+    }
+  }
+  
+  /// Handle app lifecycle changes - reload ads when app comes to foreground
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      debugPrint('App resumed - checking ad status');
+      // Reload interstitial if not ready
+      if (!_isPremium && _interstitialAd == null && !_isLoadingInterstitial) {
+        _interstitialRetryCount = 0;
+        _loadInterstitialAd();
+      }
     }
   }
 
@@ -161,8 +183,8 @@ class AdService {
               debugPrint('Interstitial ad dismissed');
               ad.dispose();
               _interstitialAd = null;
-              // Load next ad immediately
-              Future.delayed(const Duration(milliseconds: 500), _loadInterstitialAd);
+              // Load next ad immediately for next impression
+              Future.delayed(const Duration(milliseconds: 300), _loadInterstitialAd);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               debugPrint('Interstitial ad failed to show: ${error.message}');
@@ -189,14 +211,32 @@ class AdService {
       ),
     );
   }
-
-  /// Show Interstitial Ad after PDF operations (shows after EVERY operation)
-  void showInterstitialAfterOperation() {
-    // Skip if premium user
+  
+  /// OPTIMIZED: Call this when user starts an operation to ensure ad is ready when they finish
+  /// This maximizes the chance of showing an ad after every completed operation
+  void preloadForOperation() {
     if (_isPremium) return;
     
+    if (_interstitialAd == null && !_isLoadingInterstitial) {
+      debugPrint('Preloading interstitial for upcoming operation...');
+      _interstitialRetryCount = 0;
+      _loadInterstitialAd();
+    }
+  }
+
+  /// Show Interstitial Ad after PDF operations (shows after EVERY operation)
+  /// Also tracks successful operations for rating prompts
+  void showInterstitialAfterOperation() {
     _operationCount++;
-    debugPrint('Operation completed: $_operationCount (showing interstitial)');
+    debugPrint('Operation completed: $_operationCount');
+    
+    // Track for rating prompt (works for all users including premium)
+    RatingService().trackSuccessfulOperation();
+    
+    // Skip ads if premium user
+    if (_isPremium) return;
+    
+    debugPrint('Showing interstitial for operation');
     
     // Show interstitial after every completed operation
     // Also reset feature visit counter since user completed a task

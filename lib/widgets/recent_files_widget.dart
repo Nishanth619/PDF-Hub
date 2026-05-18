@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:ilovepdf_flutter/services/history_service.dart';
 import 'package:ilovepdf_flutter/models/history_item.dart';
@@ -156,15 +157,20 @@ class _RecentFileCardState extends State<_RecentFileCard> {
   }
 
   Future<void> _loadThumbnail() async {
+    if (kIsWeb) {
+      if (mounted) setState(() => _loadingThumbnail = false);
+      return;
+    }
+
     if (!widget.item.filePath.toLowerCase().endsWith('.pdf')) {
-      setState(() => _loadingThumbnail = false);
+      if (mounted) setState(() => _loadingThumbnail = false);
       return;
     }
 
     try {
       final file = File(widget.item.filePath);
       if (!await file.exists()) {
-        setState(() => _loadingThumbnail = false);
+        if (mounted) setState(() => _loadingThumbnail = false);
         return;
       }
 
@@ -234,6 +240,13 @@ class _RecentFileCardState extends State<_RecentFileCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
+        if (kIsWeb) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('History item not available on web')),
+          );
+          return;
+        }
+
         if (await File(widget.item.filePath).exists()) {
           OpenFile.open(widget.item.filePath);
         } else {
@@ -250,7 +263,7 @@ class _RecentFileCardState extends State<_RecentFileCard> {
         decoration: BoxDecoration(
           color: widget.isDark ? Colors.white.withOpacity(0.08) : Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
+         border: Border.all(
             color: widget.isDark ? Colors.white12 : Colors.grey.shade200,
           ),
           boxShadow: [
@@ -367,26 +380,28 @@ class _RecentFileCardState extends State<_RecentFileCard> {
               ),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.open_in_new_rounded),
-              title: const Text('Open'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                if (await File(widget.item.filePath).exists()) {
-                  OpenFile.open(widget.item.filePath);
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.share_rounded),
-              title: const Text('Share'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                if (await File(widget.item.filePath).exists()) {
-                  Share.shareXFiles([XFile(widget.item.filePath)]);
-                }
-              },
-            ),
+            if (!kIsWeb) ...[
+              ListTile(
+                leading: const Icon(Icons.open_in_new_rounded),
+                title: const Text('Open'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  if (await File(widget.item.filePath).exists()) {
+                    OpenFile.open(widget.item.filePath);
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share_rounded),
+                title: const Text('Share'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  if (await File(widget.item.filePath).exists()) {
+                    Share.shareXFiles([XFile(widget.item.filePath)]);
+                  }
+                },
+              ),
+            ],
             ListTile(
               leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
               title: const Text('Delete', style: TextStyle(color: Colors.red)),

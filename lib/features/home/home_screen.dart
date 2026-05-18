@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import 'package:ilovepdf_flutter/models/pdf_tool.dart';
 import 'package:ilovepdf_flutter/widgets/tool_card.dart';
@@ -45,6 +46,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   List<PdfTool> get _filteredTools {
     var tools = pdfTools.toList();
+
+    // Filter by web support (only show web-compatible tools on web)
+    if (kIsWeb) {
+      tools = tools.where((t) => t.webSupported).toList();
+    }
 
     // Filter by category
     if (_selectedCategory > 0) {

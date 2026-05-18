@@ -3,11 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:ilovepdf_flutter/models/app_settings.dart';
 import 'package:ilovepdf_flutter/services/premium_service.dart';
+import 'package:ilovepdf_flutter/services/rating_service.dart';
 import 'package:ilovepdf_flutter/widgets/settings_item.dart';
 import 'package:ilovepdf_flutter/widgets/settings_section_header.dart';
 import 'package:ilovepdf_flutter/core/theme.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -302,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SettingsItem(
                     icon: Icons.info_outline,
                     title: 'About PDF Hub',
-                    subtitle: 'Version 1.0.0',
+                    subtitle: 'Version 1.0.4',
                     trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
@@ -325,6 +326,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : const Color(0xFF8F9BB3),
                     ),
                     onTap: () => _showContactDialog(context),
+                  ),
+
+                  SettingsItem(
+                    icon: Icons.star_rate_rounded,
+                    title: 'Rate PDF Hub',
+                    subtitle: 'Love the app? Leave us a review! ⭐',
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFFB0BEC5)
+                          : const Color(0xFF8F9BB3),
+                    ),
+                    onTap: () {
+                      RatingService().openStoreForRating();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Thank you for your support! 🙏'),
+                          backgroundColor: Color(0xFF4A80F0),
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 24),
@@ -364,8 +387,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPremiumCard(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Consumer<PremiumService>(
       builder: (context, premium, _) {
         return GestureDetector(
@@ -883,7 +904,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Version 1.0.0',
+                                'Version 1.0.4',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 12),

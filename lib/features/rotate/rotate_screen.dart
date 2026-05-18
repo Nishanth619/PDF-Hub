@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:ilovepdf_flutter/services/pdf_rotator_service.dart';
 import 'package:ilovepdf_flutter/utils/history_utils.dart';
@@ -13,6 +14,7 @@ import 'package:ilovepdf_flutter/services/ad_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:printing/printing.dart';
+import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 
 class RotateScreen extends StatefulWidget {
   const RotateScreen({super.key});
@@ -22,7 +24,7 @@ class RotateScreen extends StatefulWidget {
 }
 
 class _RotateScreenState extends State<RotateScreen> {
-  File? _selectedFile;
+  PlatformFile? _selectedFile;
   int _rotation = 90;
   Set<int> _selectedPages = {};
   bool _isLoading = false;
@@ -37,10 +39,11 @@ class _RotateScreenState extends State<RotateScreen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
+      withData: kIsWeb,
     );
 
     if (result != null) {
-      final file = File(result.files.single.path!);
+      final file = result.files.single;
       
       setState(() {
         _selectedFile = file;
@@ -59,12 +62,19 @@ class _RotateScreenState extends State<RotateScreen> {
     if (_selectedFile == null) return;
     
     try {
-      // Get file size
-      final fileSize = await _selectedFile!.length();
-      
-      // Get page count and thumbnails
-      final rotations = await PdfRotator.getPageRotations(_selectedFile!.path);
-      final bytes = await _selectedFile!.readAsBytes();
+      int fileSize;
+      List<int> rotations;
+      Uint8List bytes;
+
+      if (kIsWeb) {
+        bytes = _selectedFile!.bytes!;
+        fileSize = bytes.length;
+        rotations = await PdfRotator.getPageRotationsFromBytes(bytes);
+      } else {
+        fileSize = await File(_selectedFile!.path!).length();
+        rotations = await PdfRotator.getPageRotations(_selectedFile!.path!);
+        bytes = await File(_selectedFile!.path!).readAsBytes();
+      }
       
       setState(() {
         _totalPages = rotations.length;
@@ -83,6 +93,11 @@ class _RotateScreenState extends State<RotateScreen> {
       });
     } catch (e) {
       setState(() => _isLoadingThumbnails = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading PDF: $e')),
+        );
+      }
     }
   }
 
@@ -143,14 +158,34 @@ class _RotateScreenState extends State<RotateScreen> {
     });
 
     try {
-      final result = await PdfRotator.rotatePages(
-        pdfPath: _selectedFile!.path,
-        pageNumbers: _selectedPages.toList()..sort(),
-        rotation: _rotation,
-        onProgress: (progress) {
-          setState(() => _progress = progress);
-        },
-      );
+      RotationResult result;
+      
+      if (kIsWeb) {
+        result = await PdfRotator.rotatePagesFromBytes(
+          pdfBytes: _selectedFile!.bytes!,
+          pageNumbers: _selectedPages.toList()..sort(),
+          rotation: _rotation,
+          onProgress: (progress) {
+            setState(() => _progress = progress);
+          },
+        );
+        
+        final fileName = 'rotated_${_selectedFile!.name}';
+        await PlatformFileUtils.saveFile(fileName, result.outputBytes!);
+        
+        // Update result path for display/sharing (though on web sharing might need bytes)
+        // For now, we just rely on saveFile having done its job.
+        // We might want to clear output path or set it to something meaningful for web UI if used.
+      } else {
+        result = await PdfRotator.rotatePages(
+          pdfPath: _selectedFile!.path!,
+          pageNumbers: _selectedPages.toList()..sort(),
+          rotation: _rotation,
+          onProgress: (progress) {
+            setState(() => _progress = progress);
+          },
+        );
+      }
       
       setState(() {
         _rotationResult = result;
@@ -160,7 +195,7 @@ class _RotateScreenState extends State<RotateScreen> {
       
       await HistoryUtils.addToHistory(
         context: context,
-        fileName: _selectedFile!.path.split('/').last,
+        fileName: _selectedFile!.name,
         toolName: 'Rotate PDF',
         toolId: 'rotate',
         filePath: result.outputPath,

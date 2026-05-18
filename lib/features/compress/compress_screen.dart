@@ -1,5 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -36,9 +38,13 @@ class _CompressScreenState extends State<CompressScreen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
+      withData: kIsWeb,
     );
 
     if (result != null && result.files.isNotEmpty) {
+      // Preload interstitial ad so it's ready when operation completes
+      AdService().preloadForOperation();
+      
       setState(() {
         _selectedFile = result.files.first;
         _compressionResult = null;
@@ -52,54 +58,102 @@ class _CompressScreenState extends State<CompressScreen> {
   }
 
   Future<void> _loadPdfInfo() async {
-    if (_selectedFile?.path == null) return;
+    if (_selectedFile == null) return;
     
     try {
-      // Get estimate
-      final estimate = await PdfCompressor.estimateCompression(
-        inputPath: _selectedFile!.path!,
-        quality: _selectedQuality,
-      );
-      
-      // Get thumbnail
-      final bytes = await File(_selectedFile!.path!).readAsBytes();
-      Uint8List? thumb;
-      await for (final page in Printing.raster(bytes, dpi: 50, pages: [0])) {
-        thumb = await page.toPng();
-        break;
+      if (kIsWeb) {
+        // Web implementation
+        final bytes = _selectedFile!.bytes!;
+        
+        // Ensure we have bytes
+        if (bytes.isEmpty) return;
+
+        // Estimate (mock or simple calc for web since full estimation might be heavy)
+         // For now, let's just skip complex estimation or do a simple one
+         final originalSize = bytes.length;
+         final estimate = EstimatedCompression(
+            originalSize: originalSize,
+            estimatedSize: (originalSize * 0.6).toInt(), // Rough estimate
+            estimatedRatio: 40,
+            quality: _selectedQuality,
+         );
+        
+        // Get thumbnail
+        Uint8List? thumb;
+        try {
+          await for (final page in Printing.raster(bytes, dpi: 50, pages: [0])) {
+            thumb = await page.toPng();
+            break;
+          }
+        } catch (e) {
+          debugPrint('Thumbnail generation failed: $e');
+        }
+        
+        setState(() {
+          _estimate = estimate;
+          _thumbnail = thumb;
+          _isLoadingInfo = false;
+        });
+        
+      } else {
+        // Mobile implementation
+        if (_selectedFile?.path == null) return;
+        
+        // Get estimate
+        final estimate = await PdfCompressor.estimateCompression(
+          inputPath: _selectedFile!.path!,
+          quality: _selectedQuality,
+        );
+        
+        // Get thumbnail
+        final bytes = await File(_selectedFile!.path!).readAsBytes();
+        Uint8List? thumb;
+        await for (final page in Printing.raster(bytes, dpi: 50, pages: [0])) {
+          thumb = await page.toPng();
+          break;
+        }
+        
+        setState(() {
+          _estimate = estimate;
+          _thumbnail = thumb;
+          _isLoadingInfo = false;
+        });
       }
-      
-      // Count pages (from estimate we know file exists)
-      final pdfDoc = await File(_selectedFile!.path!).readAsBytes();
-      int pages = 1;
-      // Rough page count from file - will be accurate after compression
-      
-      setState(() {
-        _estimate = estimate;
-        _thumbnail = thumb;
-        _isLoadingInfo = false;
-      });
     } catch (e) {
       setState(() => _isLoadingInfo = false);
+      debugPrint('Error loading PDF info: $e');
     }
   }
 
   Future<void> _updateEstimate() async {
-    if (_selectedFile?.path == null) return;
+    if (_selectedFile == null) return;
     
     try {
-      final estimate = await PdfCompressor.estimateCompression(
-        inputPath: _selectedFile!.path!,
-        quality: _selectedQuality,
-      );
-      setState(() => _estimate = estimate);
+      if (kIsWeb) {
+         // Update estimate for web if needed
+         final originalSize = _selectedFile!.bytes!.length;
+          final estimate = EstimatedCompression(
+            originalSize: originalSize,
+            estimatedSize: (originalSize * 0.6).toInt(), // Rough estimate
+            estimatedRatio: 40,
+            quality: _selectedQuality,
+         );
+         setState(() => _estimate = estimate);
+      } else {
+        if (_selectedFile?.path == null) return;
+        final estimate = await PdfCompressor.estimateCompression(
+          inputPath: _selectedFile!.path!,
+          quality: _selectedQuality,
+        );
+        setState(() => _estimate = estimate);
+      }
     } catch (e) {
       // Ignore errors
     }
   }
 
   Future<void> _compressFile() async {
-    if (_selectedFile?.path == null) {
+    if (_selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a PDF file first')),
       );
@@ -111,18 +165,53 @@ class _CompressScreenState extends State<CompressScreen> {
       _progress = 0.0;
     });
 
-    final tempDir = await getTemporaryDirectory();
-    final outputPath = '${tempDir.path}/compressed_${_selectedFile!.name}';
-    
     try {
-      final result = await PdfCompressor.compressPdf(
-        inputPath: _selectedFile!.path!,
-        outputPath: outputPath,
-        quality: _selectedQuality,
-        onProgress: (progress) {
-          setState(() => _progress = progress);
-        },
-      );
+      CompressionResult result;
+      
+      if (kIsWeb) {
+        // Web implementation
+        final bytes = _selectedFile!.bytes!;
+        final compressedBytes = await PdfCompressor.compressPdfFromBytes(
+          inputBytes: bytes,
+          quality: _selectedQuality,
+          onProgress: (progress) {
+             setState(() => _progress = progress);
+          },
+        );
+        
+        // Save file
+        final fileName = 'compressed_${_selectedFile!.name}';
+        await PlatformFileUtils.saveFile(fileName, compressedBytes);
+        
+        final compressedSize = compressedBytes.length;
+        final originalSize = bytes.length;
+        
+        result = CompressionResult(
+          success: true,
+          inputPath: _selectedFile!.name,
+          outputPath: fileName, // Display name
+          originalSize: originalSize,
+          compressedSize: compressedSize,
+          compressionRatio: ((originalSize - compressedSize) / originalSize * 100),
+          pageCount: 0, // Unknown without checking doc again
+          duration: Duration.zero, // Track if needed
+          quality: _selectedQuality,
+        );
+        
+      } else {
+        // Mobile implementation
+        final tempDir = await getTemporaryDirectory();
+        final outputPath = '${tempDir.path}/compressed_${_selectedFile!.name}';
+        
+        result = await PdfCompressor.compressPdf(
+          inputPath: _selectedFile!.path!,
+          outputPath: outputPath,
+          quality: _selectedQuality,
+          onProgress: (progress) {
+            setState(() => _progress = progress);
+          },
+        );
+      }
       
       setState(() {
         _isLoading = false;
@@ -141,6 +230,7 @@ class _CompressScreenState extends State<CompressScreen> {
       
       // Show interstitial ad after successful operation
       AdService().showInterstitialAfterOperation();
+      
     } catch (error) {
       setState(() => _isLoading = false);
       if (mounted) {

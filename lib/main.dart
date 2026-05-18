@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ilovepdf_flutter/core/theme.dart';
 import 'package:ilovepdf_flutter/services/api_service.dart';
 import 'package:ilovepdf_flutter/services/navigation_service.dart';
@@ -9,16 +10,19 @@ import 'package:ilovepdf_flutter/models/app_settings.dart';
 import 'package:ilovepdf_flutter/services/notification_service.dart';
 import 'package:ilovepdf_flutter/services/ad_service.dart';
 import 'package:provider/provider.dart';
+import 'package:ilovepdf_flutter/utils/google_mobile_ads.dart';
 
 void main() async {
   // Ensure widgets are initialized
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Create premium service first
-  final premiumService = PremiumService();
+  // Create premium service (only on mobile)
+  final premiumService = kIsWeb ? null : PremiumService();
   
-  // Connect premium service to ad service
-  AdService().setPremiumService(premiumService);
+  // Connect premium service to ad service (only on mobile)
+  if (!kIsWeb && premiumService != null) {
+    AdService().setPremiumService(premiumService);
+  }
   
   // Start app immediately, initialize services in background
   runApp(
@@ -27,7 +31,8 @@ void main() async {
         Provider<ApiService>(create: (_) => ApiService()),
         ChangeNotifierProvider<HistoryService>(create: (_) => HistoryService()),
         ChangeNotifierProvider<FavoritesService>(create: (_) => FavoritesService()),
-        ChangeNotifierProvider<PremiumService>.value(value: premiumService),
+        if (!kIsWeb && premiumService != null)
+          ChangeNotifierProvider<PremiumService>.value(value: premiumService),
         ChangeNotifierProvider<AppSettings>(create: (_) => AppSettings()),
       ],
       child: const MyApp(),
@@ -35,15 +40,42 @@ void main() async {
   );
   
   // Initialize services in background (don't block app startup)
-  _initializeServices();
+  if (!kIsWeb) {
+    _initializeServices();
+  }
 }
 
 Future<void> _initializeServices() async {
   // Initialize notification service
   await NotificationService().init();
   
-  // Initialize AdMob
-  await AdService().initialize();
+  // GDPR Consent Flow
+  final params = ConsentRequestParameters();
+  
+  ConsentInformation.instance.requestConsentInfoUpdate(
+    params,
+    () async {
+      if (await ConsentInformation.instance.isConsentFormAvailable()) {
+        ConsentForm.loadAndShowConsentFormIfRequired(
+          (formError) {
+            if (formError != null) {
+              debugPrint('Consent form error: ${formError.message}');
+            }
+            // Consent gathered or not required, initialize ads
+            AdService().initialize();
+          },
+        );
+      } else {
+        // No consent form required, initialize ads
+        AdService().initialize();
+      }
+    },
+    (FormError error) {
+      // Error updating consent info, try to initialize ads anyway
+      debugPrint('Error updating consent info: ${error.message}');
+      AdService().initialize();
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -53,14 +85,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AppSettings>(
       builder: (context, settings, child) {
-        // Schedule daily notification when settings change
-        if (settings.enableNotifications) {
-          NotificationService().scheduleDailyNotification(
-            hour: 9,
-            minute: 0,
-          );
-        } else {
-          NotificationService().cancelDailyNotification();
+        // Schedule daily notification when settings change (mobile only)
+        if (!kIsWeb) {
+          if (settings.enableNotifications) {
+            NotificationService().scheduleDailyNotification(
+              hour: 9,
+              minute: 0,
+            );
+          } else {
+            NotificationService().cancelDailyNotification();
+          }
         }
         
         return MaterialApp.router(

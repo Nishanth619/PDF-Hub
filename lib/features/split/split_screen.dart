@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:file_picker/file_picker.dart';
 import 'package:ilovepdf_flutter/services/pdf_merger_service.dart';
 import 'package:ilovepdf_flutter/utils/history_utils.dart';
@@ -11,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
 import 'package:ilovepdf_flutter/services/ad_service.dart';
+import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 
 enum SplitMode { pages, chunks, ranges, extract, delete, reverse }
 
@@ -22,7 +24,7 @@ class SplitScreen extends StatefulWidget {
 }
 
 class _SplitScreenState extends State<SplitScreen> {
-  File? _selectedPDF;
+  PlatformFile? _selectedFile;
   PdfInfo? _pdfInfo;
   List<Uint8List> _pageThumbnails = [];
   Set<int> _selectedPages = {}; // 1-indexed
@@ -50,22 +52,26 @@ class _SplitScreenState extends State<SplitScreen> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
+        withData: kIsWeb, // Important for web
       );
 
-      if (result != null && result.files.single.path != null) {
-        File file = File(result.files.single.path!);
+      if (result != null) {
+        final file = result.files.single;
         
         // Validate file size (50MB limit)
-        int fileSizeInBytes = await file.length();
+        int fileSizeInBytes = file.size;
         double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
         
         if (fileSizeInMB > 50) {
           _showError('File size exceeds 50MB. Please select a smaller file.');
           return;
         }
+        
+        // Preload interstitial ad so it's ready when operation completes
+        AdService().preloadForOperation();
 
         setState(() {
-          _selectedPDF = file;
+          _selectedFile = file;
           _outputPaths = [];
           _progress = 0.0;
           _pdfInfo = null;
@@ -83,89 +89,42 @@ class _SplitScreenState extends State<SplitScreen> {
   }
   
   Future<void> _loadPdfInfo() async {
-    if (_selectedPDF == null) return;
+    if (_selectedFile == null) return;
     
     try {
-      // Get PDF info first (fast)
-      final info = await PdfSplitter.getPdfInfo(_selectedPDF!.path);
-      setState(() => _pdfInfo = info);
-      
-      // Then load thumbnails (slower)
-      final thumbnails = await PdfSplitter.getPageThumbnails(_selectedPDF!.path, dpi: 50.0);
-      setState(() {
-        _pageThumbnails = thumbnails;
-        _isLoadingThumbnails = false;
-      });
+      if (kIsWeb) {
+        // Web implementation
+        final bytes = _selectedFile!.bytes!;
+        final info = await PdfSplitter.getPdfInfoFromBytes(bytes, _selectedFile!.name);
+        setState(() => _pdfInfo = info);
+        
+        final thumbnails = await PdfSplitter.getPageThumbnailsFromBytes(bytes, dpi: 50.0);
+        setState(() {
+          _pageThumbnails = thumbnails;
+          _isLoadingThumbnails = false;
+        });
+      } else {
+        // Mobile implementation
+        final path = _selectedFile!.path!;
+        final info = await PdfSplitter.getPdfInfo(path);
+        setState(() => _pdfInfo = info);
+        
+        final thumbnails = await PdfSplitter.getPageThumbnails(path, dpi: 50.0);
+        setState(() {
+          _pageThumbnails = thumbnails;
+          _isLoadingThumbnails = false;
+        });
+      }
     } catch (e) {
       setState(() => _isLoadingThumbnails = false);
       _showError('Error loading PDF info: $e');
     }
   }
   
-  void _togglePage(int pageNum) {
-    setState(() {
-      if (_selectedPages.contains(pageNum)) {
-        _selectedPages.remove(pageNum);
-      } else {
-        _selectedPages.add(pageNum);
-      }
-    });
-  }
-  
-  void _selectAll() {
-    if (_pdfInfo != null) {
-      setState(() {
-        _selectedPages = Set<int>.from(List.generate(_pdfInfo!.pageCount, (i) => i + 1));
-      });
-    }
-  }
-  
-  void _deselectAll() {
-    setState(() => _selectedPages = {});
-  }
-  
-  void _selectOddPages() {
-    if (_pdfInfo != null) {
-      setState(() {
-        _selectedPages = Set<int>.from(
-          List.generate(_pdfInfo!.pageCount, (i) => i + 1).where((p) => p % 2 == 1)
-        );
-      });
-    }
-  }
-  
-  void _selectEvenPages() {
-    if (_pdfInfo != null) {
-      setState(() {
-        _selectedPages = Set<int>.from(
-          List.generate(_pdfInfo!.pageCount, (i) => i + 1).where((p) => p % 2 == 0)
-        );
-      });
-    }
-  }
-  
-  void _selectFirstHalf() {
-    if (_pdfInfo != null) {
-      final half = (_pdfInfo!.pageCount / 2).ceil();
-      setState(() {
-        _selectedPages = Set<int>.from(List.generate(half, (i) => i + 1));
-      });
-    }
-  }
-  
-  void _selectLastHalf() {
-    if (_pdfInfo != null) {
-      final half = (_pdfInfo!.pageCount / 2).floor();
-      setState(() {
-        _selectedPages = Set<int>.from(
-          List.generate(_pdfInfo!.pageCount - half, (i) => half + i + 1)
-        );
-      });
-    }
-  }
+  // ... (selection methods unchanged)
 
   Future<void> _splitPDF() async {
-    if (_selectedPDF == null) {
+    if (_selectedFile == null) {
       _showError('Please select a PDF file');
       return;
     }
@@ -178,99 +137,148 @@ class _SplitScreenState extends State<SplitScreen> {
 
     try {
       List<String> outputPaths = [];
+      List<Uint8List> outputBytesList = [];
+      String? singleOutputPath;
+      Uint8List? singleOutputBytes;
       
-      switch (_splitMode) {
-        case SplitMode.pages:
-          outputPaths = await PdfSplitter.splitIntoPages(
-            pdfPath: _selectedPDF!.path,
-            onProgress: (progress) => setState(() => _progress = progress),
-          );
-          break;
-          
-        case SplitMode.chunks:
-          outputPaths = await PdfSplitter.splitIntoChunks(
-            pdfPath: _selectedPDF!.path,
-            chunkSize: _chunkSize,
-            onProgress: (progress) => setState(() => _progress = progress),
-          );
-          break;
-          
-        case SplitMode.ranges:
-          final List<PageRange> validRanges = [];
-          for (int i = 0; i < _ranges.length; i++) {
-            if (i < _rangeStartControllers.length && i < _rangeEndControllers.length) {
-              final startText = _rangeStartControllers[i].text.trim();
-              final endText = _rangeEndControllers[i].text.trim();
-              if (startText.isNotEmpty && endText.isNotEmpty) {
-                try {
-                  final start = int.parse(startText);
-                  final end = int.parse(endText);
-                  if (start > 0 && end > 0 && start <= end) {
-                    validRanges.add(PageRange(startPage: start, endPage: end));
-                  }
-                } catch (e) {}
-              }
+      if (kIsWeb) {
+        final bytes = _selectedFile!.bytes!;
+        
+        switch (_splitMode) {
+          case SplitMode.pages:
+            outputBytesList = await PdfSplitter.splitIntoPagesFromBytes(
+              bytes: bytes,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+             // Save all files
+            for (int i = 0; i < outputBytesList.length; i++) {
+              final fileName = 'page_${i + 1}_${_selectedFile!.name}';
+              await PlatformFileUtils.saveFile(fileName, outputBytesList[i]);
+              outputPaths.add(fileName); // Just store name for display
             }
-          }
-          if (validRanges.isEmpty) throw Exception('Please enter valid page ranges');
-          
-          outputPaths = await PdfSplitter.splitByRanges(
-            pdfPath: _selectedPDF!.path,
-            ranges: validRanges,
-            onProgress: (progress) => setState(() => _progress = progress),
-          );
-          break;
-          
-        case SplitMode.extract:
-          // Use visual selection if available, otherwise use text fields
-          List<int> pageNumbers;
-          if (_selectedPages.isNotEmpty) {
-            pageNumbers = _selectedPages.toList()..sort();
-          } else {
-            pageNumbers = [];
-            for (var controller in _pageControllers) {
-              final text = controller.text.trim();
-              if (text.isNotEmpty) {
-                try {
-                  final pageNum = int.parse(text);
-                  if (pageNum > 0) pageNumbers.add(pageNum);
-                } catch (e) {}
-              }
+            break;
+            
+          case SplitMode.chunks:
+            outputBytesList = await PdfSplitter.splitIntoChunksFromBytes(
+              bytes: bytes,
+              chunkSize: _chunkSize,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+             // Save all files
+            for (int i = 0; i < outputBytesList.length; i++) {
+               final fileName = 'chunk_${i + 1}_${_selectedFile!.name}';
+               await PlatformFileUtils.saveFile(fileName, outputBytesList[i]);
+               outputPaths.add(fileName);
             }
-          }
-          
-          if (pageNumbers.isEmpty) {
-            throw Exception('Please select pages to extract');
-          }
-          
-          final outputPath = await PdfSplitter.extractPages(
-            pdfPath: _selectedPDF!.path,
-            pageNumbers: pageNumbers,
-            onProgress: (progress) => setState(() => _progress = progress),
-          );
-          outputPaths = [outputPath];
-          break;
-          
-        case SplitMode.delete:
-          if (_selectedPages.isEmpty) {
-            throw Exception('Please select pages to delete');
-          }
-          
-          final deletePath = await PdfSplitter.removePages(
-            pdfPath: _selectedPDF!.path,
-            pageNumbers: _selectedPages.toList(),
-            onProgress: (progress) => setState(() => _progress = progress),
-          );
-          outputPaths = [deletePath];
-          break;
-          
-        case SplitMode.reverse:
-          final reversePath = await PdfSplitter.reverseOrder(
-            pdfPath: _selectedPDF!.path,
-            onProgress: (progress) => setState(() => _progress = progress),
-          );
-          outputPaths = [reversePath];
-          break;
+            break;
+            
+          case SplitMode.ranges:
+            final List<PageRange> validRanges = _getValidRanges();
+             outputBytesList = await PdfSplitter.splitByRangesFromBytes(
+              bytes: bytes,
+              ranges: validRanges,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            // Save all files
+            for (int i = 0; i < outputBytesList.length; i++) {
+              final range = validRanges[i];
+              final fileName = 'pages_${range.startPage}-${range.endPage}_${_selectedFile!.name}';
+              await PlatformFileUtils.saveFile(fileName, outputBytesList[i]);
+              outputPaths.add(fileName);
+            }
+            break;
+            
+          case SplitMode.extract:
+            final pageNumbers = _getPagedNumbers();
+            singleOutputBytes = await PdfSplitter.extractPagesFromBytes(
+              bytes: bytes,
+              pageNumbers: pageNumbers,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            final fileName = 'extracted_${_selectedFile!.name}';
+            await PlatformFileUtils.saveFile(fileName, singleOutputBytes);
+            outputPaths = [fileName];
+            break;
+            
+          case SplitMode.delete:
+            if (_selectedPages.isEmpty) throw Exception('Please select pages to delete');
+            singleOutputBytes = await PdfSplitter.removePagesFromBytes(
+              bytes: bytes,
+              pageNumbers: _selectedPages.toList(),
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            final fileName = 'cleaned_${_selectedFile!.name}';
+            await PlatformFileUtils.saveFile(fileName, singleOutputBytes);
+            outputPaths = [fileName];
+            break;
+            
+          case SplitMode.reverse:
+            singleOutputBytes = await PdfSplitter.reverseOrderFromBytes(
+              bytes: bytes,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            final fileName = 'reversed_${_selectedFile!.name}';
+            await PlatformFileUtils.saveFile(fileName, singleOutputBytes);
+            outputPaths = [fileName];
+            break;
+        }
+      } else {
+        // Mobile Implementation
+        final path = _selectedFile!.path!;
+        
+        switch (_splitMode) {
+          case SplitMode.pages:
+            outputPaths = await PdfSplitter.splitIntoPages(
+              pdfPath: path,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            break;
+            
+          case SplitMode.chunks:
+            outputPaths = await PdfSplitter.splitIntoChunks(
+              pdfPath: path,
+              chunkSize: _chunkSize,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            break;
+            
+          case SplitMode.ranges:
+             final List<PageRange> validRanges = _getValidRanges();
+            outputPaths = await PdfSplitter.splitByRanges(
+              pdfPath: path,
+              ranges: validRanges,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            break;
+            
+          case SplitMode.extract:
+            final pageNumbers = _getPagedNumbers();
+            singleOutputPath = await PdfSplitter.extractPages(
+              pdfPath: path,
+              pageNumbers: pageNumbers,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            outputPaths = [singleOutputPath];
+            break;
+            
+          case SplitMode.delete:
+            if (_selectedPages.isEmpty) throw Exception('Please select pages to delete');
+             singleOutputPath = await PdfSplitter.removePages(
+              pdfPath: path,
+              pageNumbers: _selectedPages.toList(),
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            outputPaths = [singleOutputPath];
+            break;
+            
+          case SplitMode.reverse:
+            singleOutputPath = await PdfSplitter.reverseOrder(
+              pdfPath: path,
+              onProgress: (progress) => setState(() => _progress = progress),
+            );
+            outputPaths = [singleOutputPath];
+            break;
+        }
       }
 
       setState(() {
@@ -283,7 +291,7 @@ class _SplitScreenState extends State<SplitScreen> {
       for (final outputPath in outputPaths) {
         await HistoryUtils.addToHistory(
           context: context,
-          fileName: outputPath.split('/').last,
+          fileName: outputPath.split(Platform.pathSeparator).last, // Better separator handling
           toolName: 'Split PDF',
           toolId: 'split',
           filePath: outputPath,
@@ -301,6 +309,51 @@ class _SplitScreenState extends State<SplitScreen> {
       });
       _showError('Split failed: $e');
     }
+  }
+
+  List<PageRange> _getValidRanges() {
+    final List<PageRange> validRanges = [];
+    for (int i = 0; i < _ranges.length; i++) {
+        if (i < _rangeStartControllers.length && i < _rangeEndControllers.length) {
+            final startText = _rangeStartControllers[i].text.trim();
+            final endText = _rangeEndControllers[i].text.trim();
+            if (startText.isNotEmpty && endText.isNotEmpty) {
+            try {
+                final start = int.parse(startText);
+                final end = int.parse(endText);
+                if (start > 0 && end > 0 && start <= end) {
+                validRanges.add(PageRange(startPage: start, endPage: end));
+                }
+            } catch (e) {}
+            }
+        }
+    }
+    if (validRanges.isEmpty) throw Exception('Please enter valid page ranges');
+    return validRanges;
+  }
+
+  List<int> _getPagedNumbers() {
+       // Use visual selection if available, otherwise use text fields
+      List<int> pageNumbers;
+      if (_selectedPages.isNotEmpty) {
+        pageNumbers = _selectedPages.toList()..sort();
+      } else {
+        pageNumbers = [];
+        for (var controller in _pageControllers) {
+            final text = controller.text.trim();
+            if (text.isNotEmpty) {
+            try {
+                final pageNum = int.parse(text);
+                if (pageNum > 0) pageNumbers.add(pageNum);
+            } catch (e) {}
+            }
+        }
+      }
+      
+      if (pageNumbers.isEmpty) {
+        throw Exception('Please select pages to extract');
+      }
+      return pageNumbers;
   }
 
   void _addPageField() {
@@ -333,6 +386,64 @@ class _SplitScreenState extends State<SplitScreen> {
         _ranges.removeAt(index);
       });
     }
+  }
+
+  void _togglePage(int pageNum) {
+    setState(() {
+      if (_selectedPages.contains(pageNum)) {
+        _selectedPages.remove(pageNum);
+      } else {
+        _selectedPages.add(pageNum);
+      }
+    });
+  }
+
+  void _selectAll() {
+    if (_pdfInfo == null) return;
+    setState(() {
+      _selectedPages = Set<int>.from(
+          List<int>.generate(_pdfInfo!.pageCount, (i) => i + 1));
+    });
+  }
+
+  void _deselectAll() {
+    setState(() => _selectedPages = {});
+  }
+
+  void _selectOddPages() {
+    if (_pdfInfo == null) return;
+    setState(() {
+      _selectedPages = Set<int>.from(
+          List<int>.generate(_pdfInfo!.pageCount, (i) => i + 1)
+              .where((p) => p.isOdd));
+    });
+  }
+
+  void _selectEvenPages() {
+    if (_pdfInfo == null) return;
+    setState(() {
+      _selectedPages = Set<int>.from(
+          List<int>.generate(_pdfInfo!.pageCount, (i) => i + 1)
+              .where((p) => p.isEven));
+    });
+  }
+
+  void _selectFirstHalf() {
+    if (_pdfInfo == null) return;
+    final half = (_pdfInfo!.pageCount / 2).ceil();
+    setState(() {
+      _selectedPages = Set<int>.from(
+          List<int>.generate(half, (i) => i + 1));
+    });
+  }
+
+  void _selectLastHalf() {
+    if (_pdfInfo == null) return;
+    final half = (_pdfInfo!.pageCount / 2).ceil();
+    setState(() {
+      _selectedPages = Set<int>.from(
+          List<int>.generate(_pdfInfo!.pageCount - half, (i) => half + i + 1));
+    });
   }
 
   void _showError(String message) {
@@ -510,7 +621,7 @@ class _SplitScreenState extends State<SplitScreen> {
                           Icon(
                             Icons.picture_as_pdf,
                             size: 56,
-                            color: _selectedPDF != null 
+                            color: _selectedFile != null 
                                 ? const Color(0xFF4A80F0) 
                                 : (Theme.of(context).brightness == Brightness.dark
                                     ? const Color(0xFFB0BEC5)
@@ -534,7 +645,7 @@ class _SplitScreenState extends State<SplitScreen> {
                               ),
                             ),
                           ),
-                          if (_selectedPDF != null) ...[
+                          if (_selectedFile != null) ...[
                             const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
@@ -546,7 +657,7 @@ class _SplitScreenState extends State<SplitScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                _selectedPDF!.path.split('/').last,
+                                _selectedFile!.name,
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 12,
@@ -566,7 +677,7 @@ class _SplitScreenState extends State<SplitScreen> {
                 ),
                 
                 // PDF Info Display
-                if (_selectedPDF != null && _pdfInfo != null) ...[
+                if (_selectedFile != null && _pdfInfo != null) ...[
                   Container(
                     margin: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
                     padding: const EdgeInsets.all(16),
@@ -590,7 +701,7 @@ class _SplitScreenState extends State<SplitScreen> {
                 const SizedBox(height: 8),
 
                 // Split Mode Selection
-                if (_selectedPDF != null) ...[
+                if (_selectedFile != null) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
                     child: Text(

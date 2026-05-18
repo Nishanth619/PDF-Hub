@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -7,6 +7,99 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 /// Powerful PDF Rotator for Flutter using Syncfusion
 /// Rotates PDF pages accurately and efficiently
 class PdfRotator {
+  /// Rotate all pages in a PDF
+  /// 
+  /// [pdfPath] - Path to the PDF file
+  /// [rotation] - Rotation angle (90, 180, 270, or -90, -180, -270)
+  /// [outputPath] - Optional output path
+  /// Rotate all pages in a PDF from bytes
+  static Future<RotationResult> rotateAllPagesFromBytes({
+    required Uint8List pdfBytes,
+    required int rotation,
+    String? outputPath, // Only used for return value structure, actual saving done by caller on web
+    Function(double)? onProgress,
+  }) async {
+    final validRotation = _normalizeRotation(rotation);
+    final document = PdfDocument(inputBytes: pdfBytes);
+
+    try {
+      final pageCount = document.pages.count;
+
+      for (int i = 0; i < pageCount; i++) {
+        final page = document.pages[i];
+        page.rotation = _getPdfRotation(validRotation);
+
+        if (onProgress != null) {
+          onProgress((i + 1) / pageCount);
+        }
+      }
+
+      final outputBytes = await document.save();
+      
+      // On web we don't save to file here, we return bytes or save via helper
+      // But for consistency with existing API we might want to return bytes
+      // Let's make a method that returns bytes
+      
+      document.dispose();
+
+      return RotationResult(
+        outputPath: outputPath ?? 'memory',
+        rotatedPages: pageCount,
+        rotation: validRotation,
+        outputBytes: Uint8List.fromList(outputBytes),
+      );
+    } catch (e) {
+      document.dispose();
+      throw Exception('Error rotating PDF: $e');
+    }
+  }
+
+  static Future<RotationResult> rotatePagesFromBytes({
+    required Uint8List pdfBytes,
+    required List<int> pageNumbers,
+    required int rotation,
+    String? outputPath,
+    Function(double)? onProgress,
+  }) async {
+    final validRotation = _normalizeRotation(rotation);
+    final document = PdfDocument(inputBytes: pdfBytes);
+
+    try {
+      final pageCount = document.pages.count;
+      int processedPages = 0;
+
+      for (int pageNum in pageNumbers) {
+        if (pageNum < 1 || pageNum > pageCount) {
+          document.dispose();
+          throw ArgumentError('Page $pageNum is out of range (1-$pageCount)');
+        }
+
+        final page = document.pages[pageNum - 1];
+        page.rotation = _getPdfRotation(validRotation);
+
+        processedPages++;
+        if (onProgress != null) {
+          onProgress(processedPages / pageNumbers.length);
+        }
+      }
+
+      final outputBytes = await document.save();
+      document.dispose();
+
+      return RotationResult(
+        outputPath: outputPath ?? 'memory',
+        rotatedPages: pageNumbers.length,
+        rotation: validRotation,
+        outputBytes: Uint8List.fromList(outputBytes),
+      );
+    } catch (e) {
+      document.dispose();
+      throw Exception('Error rotating pages: $e');
+    }
+  }
+
+  // ... (similar methods for range, odd, even)
+
   /// Rotate all pages in a PDF
   /// 
   /// [pdfPath] - Path to the PDF file
@@ -50,6 +143,9 @@ class PdfRotator {
       throw Exception('Error rotating PDF: $e');
     }
   }
+  
+  // ... (existing methods using File)
+
 
   /// Rotate specific pages
   /// 
@@ -167,6 +263,145 @@ class PdfRotator {
     }
   }
 
+  static Future<RotationResult> rotatePageRangeFromBytes({
+    required Uint8List pdfBytes,
+    required int startPage,
+    required int endPage,
+    required int rotation,
+    String? outputPath,
+    Function(double)? onProgress,
+  }) async {
+    final validRotation = _normalizeRotation(rotation);
+    final document = PdfDocument(inputBytes: pdfBytes);
+
+    try {
+      final pageCount = document.pages.count;
+
+      if (startPage < 1 || startPage > pageCount) {
+        document.dispose();
+        throw ArgumentError('Start page $startPage is out of range (1-$pageCount)');
+      }
+
+      if (endPage < 1 || endPage > pageCount) {
+        document.dispose();
+        throw ArgumentError('End page $endPage is out of range (1-$pageCount)');
+      }
+
+      if (startPage > endPage) {
+        document.dispose();
+        throw ArgumentError('Start page cannot be greater than end page');
+      }
+
+      final totalPages = endPage - startPage + 1;
+      int processedPages = 0;
+
+      for (int i = startPage - 1; i < endPage; i++) {
+        final page = document.pages[i];
+        page.rotation = _getPdfRotation(validRotation);
+
+        processedPages++;
+        if (onProgress != null) {
+          onProgress(processedPages / totalPages);
+        }
+      }
+
+      final outputBytes = await document.save();
+      document.dispose();
+
+      return RotationResult(
+        outputPath: outputPath ?? 'memory',
+        rotatedPages: totalPages,
+        rotation: validRotation,
+        outputBytes: Uint8List.fromList(outputBytes),
+      );
+    } catch (e) {
+      document.dispose();
+      throw Exception('Error rotating page range: $e');
+    }
+  }
+
+  static Future<RotationResult> rotateOddPagesFromBytes({
+    required Uint8List pdfBytes,
+    required int rotation,
+    String? outputPath,
+    Function(double)? onProgress,
+  }) async {
+    final validRotation = _normalizeRotation(rotation);
+    final document = PdfDocument(inputBytes: pdfBytes);
+
+    try {
+      final pageCount = document.pages.count;
+      int rotatedCount = 0;
+
+      for (int i = 0; i < pageCount; i++) {
+        if ((i + 1) % 2 == 1) {
+          final page = document.pages[i];
+          page.rotation = _getPdfRotation(validRotation);
+          rotatedCount++;
+        }
+
+        if (onProgress != null) {
+          onProgress((i + 1) / pageCount);
+        }
+      }
+
+      final outputBytes = await document.save();
+      document.dispose();
+
+      return RotationResult(
+        outputPath: outputPath ?? 'memory',
+        rotatedPages: rotatedCount,
+        rotation: validRotation,
+        outputBytes: Uint8List.fromList(outputBytes),
+      );
+    } catch (e) {
+      document.dispose();
+      throw Exception('Error rotating odd pages: $e');
+    }
+  }
+
+  static Future<RotationResult> rotateEvenPagesFromBytes({
+    required Uint8List pdfBytes,
+    required int rotation,
+    String? outputPath,
+    Function(double)? onProgress,
+  }) async {
+    final validRotation = _normalizeRotation(rotation);
+    final document = PdfDocument(inputBytes: pdfBytes);
+
+    try {
+      final pageCount = document.pages.count;
+      int rotatedCount = 0;
+
+      for (int i = 0; i < pageCount; i++) {
+        if ((i + 1) % 2 == 0) {
+          final page = document.pages[i];
+          page.rotation = _getPdfRotation(validRotation);
+          rotatedCount++;
+        }
+
+        if (onProgress != null) {
+          onProgress((i + 1) / pageCount);
+        }
+      }
+
+      final outputBytes = await document.save();
+      document.dispose();
+
+      return RotationResult(
+        outputPath: outputPath ?? 'memory',
+        rotatedPages: rotatedCount,
+        rotation: validRotation,
+        outputBytes: Uint8List.fromList(outputBytes),
+      );
+    } catch (e) {
+      document.dispose();
+      throw Exception('Error rotating even pages: $e');
+    }
+  }
+
+  // ... (existing methods using File)
+
   /// Rotate odd pages only
   static Future<RotationResult> rotateOddPages({
     required String pdfPath,
@@ -259,6 +494,20 @@ class PdfRotator {
   static Future<List<int>> getPageRotations(String pdfPath) async {
     final originalBytes = await _readPdfBytes(pdfPath);
     final document = PdfDocument(inputBytes: originalBytes);
+    
+    final rotations = <int>[];
+    for (int i = 0; i < document.pages.count; i++) {
+      final page = document.pages[i];
+      rotations.add(_getRotationDegrees(page.rotation));
+    }
+    
+    document.dispose();
+    return rotations;
+  }
+
+  /// Get current rotation of all pages from bytes
+  static Future<List<int>> getPageRotationsFromBytes(Uint8List pdfBytes) async {
+    final document = PdfDocument(inputBytes: pdfBytes);
     
     final rotations = <int>[];
     for (int i = 0; i < document.pages.count; i++) {
@@ -375,11 +624,13 @@ class RotationResult {
   final String outputPath;
   final int rotatedPages;
   final int rotation;
+  final Uint8List? outputBytes;
 
   RotationResult({
     required this.outputPath,
     required this.rotatedPages,
     required this.rotation,
+    this.outputBytes,
   });
 
   String get rotationDescription {

@@ -1,5 +1,7 @@
-import 'dart:io' show Platform, File;
+import 'package:universal_io/io.dart' show Platform, File;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:ilovepdf_flutter/utils/history_utils.dart';
@@ -15,6 +17,7 @@ import 'package:ilovepdf_flutter/services/pdf_image_converter_service.dart';
 import 'package:ilovepdf_flutter/widgets/base_screen.dart';
 import 'package:ilovepdf_flutter/widgets/help_dialog.dart';
 import 'package:ilovepdf_flutter/services/ad_service.dart';
+import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 
 class ImageToPdfScreen extends StatefulWidget {
   const ImageToPdfScreen({super.key});
@@ -24,7 +27,7 @@ class ImageToPdfScreen extends StatefulWidget {
 }
 
 class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = [];
   bool _isConverting = false;
   double _progress = 0.0;
   PdfConversionResult? _conversionResult;
@@ -36,37 +39,31 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
 
   Future<void> _pickImages() async {
     try {
-      bool hasPermission = false;
-      
-      if (Platform.isAndroid) {
-        PermissionStatus status = await Permission.storage.request();
-        if (status == PermissionStatus.granted) {
-          hasPermission = true;
-        } else {
-          status = await Permission.mediaLibrary.request();
+      if (!kIsWeb) {
+        bool hasPermission = false;
+        
+        if (Platform.isAndroid) {
+          PermissionStatus status = await Permission.storage.request();
           if (status == PermissionStatus.granted) {
             hasPermission = true;
           } else {
-            status = await Permission.photos.request();
-            if (status == PermissionStatus.granted) {
-              hasPermission = true;
-            }
+             // Try other permissions
+             if (await Permission.photos.request().isGranted || 
+                 await Permission.mediaLibrary.request().isGranted) {
+               hasPermission = true;
+             }
           }
-        }
-      } else if (Platform.isIOS) {
-        PermissionStatus status = await Permission.photos.request();
-        if (status == PermissionStatus.granted) {
+        } else if (Platform.isIOS) {
+          if (await Permission.photos.request().isGranted) {
+            hasPermission = true;
+          }
+        } else {
           hasPermission = true;
         }
-      } else {
-        hasPermission = true;
-      }
-      
-      if (!hasPermission) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permission denied. Please enable photo access.')),
-        );
-        return;
+        
+        if (!hasPermission) {
+          // Continue anyway, image_picker handles some permissions itself or throws specific errors
+        }
       }
 
       final ImagePicker picker = ImagePicker();
@@ -74,7 +71,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
 
       if (images.isNotEmpty) {
         setState(() {
-          _selectedImages.addAll(images.map((image) => File(image.path)));
+          _selectedImages.addAll(images);
           _conversionResult = null;
           _progress = 0.0;
         });
@@ -88,6 +85,13 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
 
   Future<void> _pickFromCamera() async {
     try {
+      if (kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document scanning is not supported on web yet.')),
+        );
+        return; 
+      }
+      
       PermissionStatus status = await Permission.camera.request();
       
       if (status != PermissionStatus.granted) {
@@ -105,7 +109,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
       if (scannedImages != null && scannedImages.isNotEmpty) {
         setState(() {
           for (final imagePath in scannedImages) {
-            _selectedImages.add(File(imagePath));
+            _selectedImages.add(XFile(imagePath));
           }
           _conversionResult = null;
           _progress = 0.0;
@@ -139,32 +143,51 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
     });
 
     try {
-      final validImagePaths = <String>[];
-      for (final file in _selectedImages) {
-        if (file.path.isNotEmpty && await File(file.path).exists()) {
-          validImagePaths.add(file.path);
+      PdfConversionResult result;
+      
+      if (kIsWeb) {
+        // Web implementation - read bytes
+        final List<Uint8List> imageBytesList = [];
+        
+        for (final file in _selectedImages) {
+          final bytes = await file.readAsBytes();
+          imageBytesList.add(bytes);
         }
-      }
-
-      if (validImagePaths.isEmpty) {
-        setState(() => _isConverting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No valid images found')),
+        
+        result = await ImageToPdfConverter.convertImagesToPdfFromBytes(
+          imageBytesList: imageBytesList,
+          quality: _quality,
+          pageSize: _pageSize,
+          orientation: _orientation,
+          margin: _margin,
+          autoRotate: _autoRotate,
+          onProgress: (progress) {
+            if (mounted) setState(() => _progress = progress);
+          },
         );
-        return;
+        
+        final fileName = 'images_to_pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        await PlatformFileUtils.saveFile(fileName, result.outputBytes!);
+        
+      } else {
+        // Mobile implementation
+        final validImagePaths = <String>[];
+        for (final file in _selectedImages) {
+           validImagePaths.add(file.path);
+        }
+        
+        result = await ImageToPdfConverter.convertImagesToPdf(
+          imagePaths: validImagePaths,
+          quality: _quality,
+          pageSize: _pageSize,
+          orientation: _orientation,
+          margin: _margin,
+          autoRotate: _autoRotate,
+          onProgress: (progress) {
+            if (mounted) setState(() => _progress = progress);
+          },
+        );
       }
-
-      final result = await ImageToPdfConverter.convertImagesToPdf(
-        imagePaths: validImagePaths,
-        quality: _quality,
-        pageSize: _pageSize,
-        orientation: _orientation,
-        margin: _margin,
-        autoRotate: _autoRotate,
-        onProgress: (progress) {
-          if (mounted) setState(() => _progress = progress);
-        },
-      );
 
       if (mounted) {
         setState(() {
@@ -175,7 +198,7 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
         
         await HistoryUtils.addToHistory(
           context: context,
-          fileName: result.outputPath.split('/').last,
+          fileName: result.outputPath.split('/').last, // This might be dummy on web but it's fine for history name
           toolName: 'Images to PDF',
           toolId: 'image_to_pdf',
           filePath: result.outputPath,
@@ -439,14 +462,23 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    Image.file(
-                                      _selectedImages[index],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
-                                        color: Colors.grey[300],
-                                        child: const Icon(Icons.broken_image),
-                                      ),
-                                    ),
+                                    kIsWeb 
+                                        ? Image.network(
+                                            _selectedImages[index].path,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => Container(
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.broken_image),
+                                            ),
+                                          )
+                                        : Image.file(
+                                            File(_selectedImages[index].path),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => Container(
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.broken_image),
+                                            ),
+                                          ),
                                     // Page number badge
                                     Positioned(
                                       bottom: 4,
@@ -650,34 +682,50 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          _conversionResult!.outputPath.split('/').last,
-                          style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? const Color(0xFFB0BEC5)
-                                : Colors.grey[600], 
-                            fontSize: 12,
+                        if (!kIsWeb)
+                          Text(
+                            _conversionResult!.outputPath.split('/').last,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFFB0BEC5)
+                                  : Colors.grey[600], 
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () => OpenFile.open(_conversionResult!.outputPath),
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('Open'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
+                            if (!kIsWeb)
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => OpenFile.open(_conversionResult!.outputPath),
+                                  icon: const Icon(Icons.open_in_new),
+                                  label: const Text('Open'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
+                            if (!kIsWeb) const SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed: () => Share.shareXFiles([XFile(_conversionResult!.outputPath)]),
+                                onPressed: () async {
+                                  if (kIsWeb) {
+                                    if (_conversionResult!.outputBytes != null) {
+                                      await Share.shareXFiles([
+                                        XFile.fromData(
+                                          _conversionResult!.outputBytes!,
+                                          name: 'images_to_pdf.pdf',
+                                          mimeType: 'application/pdf',
+                                        )
+                                      ]);
+                                    }
+                                  } else {
+                                    await Share.shareXFiles([XFile(_conversionResult!.outputPath)]);
+                                  }
+                                },
                                 icon: const Icon(Icons.share),
                                 label: const Text('Share'),
                                 style: ElevatedButton.styleFrom(
@@ -688,15 +736,17 @@ class _ImageToPdfScreenState extends State<ImageToPdfScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _showRenameDialog,
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Rename PDF'),
+                        if (!kIsWeb) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _showRenameDialog,
+                              icon: const Icon(Icons.edit),
+                              label: const Text('Rename PDF'),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

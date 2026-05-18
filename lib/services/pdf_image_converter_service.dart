@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show compute;
@@ -101,6 +101,145 @@ class _CopyCropResult {
 /// Powerful Mobile Image to PDF Converter
 /// Optimized for performance, quality, and memory efficiency
 class ImageToPdfConverter {
+  /// Convert multiple images to a single PDF from bytes
+  static Future<PdfConversionResult> convertImagesToPdfFromBytes({
+    required List<Uint8List> imageBytesList,
+    String? outputPath, // Not used for web saving, but for result
+    ImageQuality quality = ImageQuality.high,
+    PdfPageFormat? pageSize,
+    PageOrientation? orientation,
+    double margin = 20.0,
+    bool autoRotate = true,
+    bool compress = true,
+    Function(double)? onProgress,
+  }) async {
+     if (imageBytesList.isEmpty) {
+      throw Exception('No images provided');
+    }
+
+    final pdf = pw.Document();
+    final processedImages = <ProcessedImage>[];
+    int successCount = 0;
+    int failedCount = 0;
+
+    try {
+      for (int i = 0; i < imageBytesList.length; i++) {
+        try {
+          if (onProgress != null) {
+            onProgress((i + 1) / imageBytesList.length);
+          }
+
+          final imageBytes = imageBytesList[i];
+          if (imageBytes.isEmpty) {
+            failedCount++;
+            continue;
+          }
+
+          var image = img.decodeImage(imageBytes);
+          if (image == null) {
+            failedCount++;
+            continue;
+          }
+
+          // Process image based on quality settings in background isolate
+          // Compute should work on web too
+          final result = await compute(_processImageIsolate, 
+            _ProcessImageParams(image: image, quality: quality, compress: compress));
+          image = result.image;
+
+          // Determine orientation
+          final isLandscape = image.width > image.height;
+          final finalOrientation = orientation ?? 
+            (autoRotate 
+              ? (isLandscape ? PageOrientation.landscape : PageOrientation.portrait)
+              : PageOrientation.portrait);
+
+          // Encode to JPEG for smaller file size with error handling
+          Uint8List processedBytes;
+          try {
+            processedBytes = Uint8List.fromList(
+              img.encodeJpg(image, quality: _getJpegQuality(quality))
+            );
+          } catch (e) {
+            print('Failed to encode image: $e');
+            failedCount++;
+            continue;
+          }
+
+          final pdfImage = pw.MemoryImage(processedBytes);
+
+          // Calculate dimensions to fit page
+          final format = pageSize ?? PdfPageFormat.a4;
+          final pageWidth = finalOrientation == PageOrientation.portrait 
+            ? format.width 
+            : format.height;
+          final pageHeight = finalOrientation == PageOrientation.portrait 
+            ? format.height 
+            : format.width;
+
+          final availableWidth = pageWidth - (margin * 2);
+          final availableHeight = pageHeight - (margin * 2);
+
+          // Add page with image
+          pdf.addPage(
+            pw.Page(
+              pageFormat: format.copyWith(
+                width: pageWidth,
+                height: pageHeight,
+              ),
+              margin: pw.EdgeInsets.all(margin),
+              build: (context) {
+                return pw.Center(
+                  child: pw.Image(
+                    pdfImage,
+                    fit: pw.BoxFit.contain,
+                    width: availableWidth,
+                    height: availableHeight,
+                  ),
+                );
+              },
+            ),
+          );
+
+          processedImages.add(ProcessedImage(
+            originalPath: 'image_$i', // Dummy path
+            width: image.width,
+            height: image.height,
+            fileSize: processedBytes.length,
+            pageNumber: i + 1,
+          ));
+
+          successCount++;
+        } catch (e, stackTrace) {
+          print('Failed to process image $i: $e');
+          failedCount++;
+        }
+      }
+
+      // Check if we have any successful images
+      if (successCount == 0) {
+        throw Exception('No images could be processed successfully');
+      }
+
+      final pdfBytes = await pdf.save();
+      
+      return PdfConversionResult(
+        success: true,
+        outputPath: outputPath ?? 'memory',
+        pageCount: successCount,
+        fileSize: pdfBytes.length,
+        processedImages: processedImages,
+        failedCount: failedCount,
+        outputBytes: pdfBytes,
+      );
+    } catch (e, stackTrace) {
+      print('PDF conversion failed: $e');
+      // Clean up any resources
+      processedImages.clear();
+      rethrow;
+    }
+  }
+
   /// Convert multiple images to a single PDF
   /// 
   /// [imagePaths] - List of image file paths
@@ -779,6 +918,7 @@ class PdfConversionResult {
   final int fileSize;
   final List<ProcessedImage> processedImages;
   final int failedCount;
+  final Uint8List? outputBytes;
 
   PdfConversionResult({
     required this.success,
@@ -787,6 +927,7 @@ class PdfConversionResult {
     required this.fileSize,
     required this.processedImages,
     required this.failedCount,
+    this.outputBytes,
   });
 
   String get fileSizeFormatted {

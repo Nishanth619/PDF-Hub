@@ -3,11 +3,13 @@ import 'package:ilovepdf_flutter/features/annotate/annotate_screen.dart';
 import 'package:ilovepdf_flutter/features/compress/compress_screen.dart';
 import 'package:ilovepdf_flutter/features/convert/convert_screen.dart';
 import 'package:ilovepdf_flutter/features/form_filler/form_filler_screen.dart';
+import 'package:ilovepdf_flutter/features/pdf_viewer/pdf_viewer_screen.dart';
 import 'package:ilovepdf_flutter/features/history/history_screen.dart';
 import 'package:ilovepdf_flutter/features/home/home_screen.dart';
 import 'package:ilovepdf_flutter/features/image_to_pdf/image_to_pdf_screen.dart';
 import 'package:ilovepdf_flutter/features/merge/merge_screen.dart';
 import 'package:ilovepdf_flutter/features/ocr/ocr_screen.dart';
+import 'package:ilovepdf_flutter/features/ocr/camera_ocr_screen.dart';
 import 'package:ilovepdf_flutter/features/page_number/page_number_screen.dart';
 import 'package:ilovepdf_flutter/features/premium/premium_screen.dart';
 import 'package:ilovepdf_flutter/features/rotate/rotate_screen.dart';
@@ -49,6 +51,10 @@ class NavigationService {
         builder: (context, state) => const FormFillerScreen(),
       ),
       GoRoute(
+        path: '/pdfviewer',
+        builder: (context, state) => const PdfViewerScreen(),
+      ),
+      GoRoute(
         path: '/convert',
         builder: (context, state) => const ConvertScreen(),
       ),
@@ -71,6 +77,7 @@ class NavigationService {
         builder: (context, state) => const AddPageNumbersPage(),
       ),
       GoRoute(path: '/ocr', builder: (context, state) => const OcrScreen()),
+      GoRoute(path: '/ocr/camera', builder: (context, state) => const CameraOcrScreen()),
       GoRoute(
         path: '/imagetopdf',
         builder: (context, state) => const ImageToPdfScreen(),

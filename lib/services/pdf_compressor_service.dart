@@ -1,7 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show compute;
+import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart' as pdf_lib;
 import 'package:pdf/widgets.dart' as pw;
@@ -34,6 +34,12 @@ class PdfCompressor {
   /// [outputPath] - Output path (optional, auto-generated if null)
   /// [quality] - Compression quality level
   /// [onProgress] - Progress callback (0.0 to 1.0)
+  /// Compress PDF with specified quality level
+  /// 
+  /// [inputPath] - Path to input PDF file
+  /// [outputPath] - Output path (optional, auto-generated if null)
+  /// [quality] - Compression quality level
+  /// [onProgress] - Progress callback (0.0 to 1.0)
   static Future<CompressionResult> compressPdf({
     required String inputPath,
     String? outputPath,
@@ -48,9 +54,47 @@ class PdfCompressor {
     }
 
     final originalSize = await inputFile.length();
+    final bytes = await inputFile.readAsBytes();
     
     try {
-      final document = await pdfx_lib.PdfDocument.openFile(inputPath);
+      final resultBytes = await compressPdfFromBytes(
+        inputBytes: bytes,
+        quality: quality,
+        onProgress: onProgress,
+      );
+
+      // Save compressed PDF
+      final finalPath = outputPath ?? await _generateOutputPath(inputPath);
+      final outputFile = File(finalPath);
+      await outputFile.writeAsBytes(resultBytes);
+
+      final compressedSize = await outputFile.length();
+      final compressionRatio = ((originalSize - compressedSize) / originalSize * 100);
+      final duration = DateTime.now().difference(startTime);
+
+      return CompressionResult(
+        success: true,
+        inputPath: inputPath,
+        outputPath: finalPath,
+        originalSize: originalSize,
+        compressedSize: compressedSize,
+        compressionRatio: compressionRatio,
+        pageCount: 0, // Need to return page count from bytes method if possible
+        duration: duration,
+        quality: quality,
+      );
+    } catch (e) {
+      throw Exception('PDF compression failed: $e');
+    }
+  }
+
+  /// Compress PDF from bytes
+  static Future<Uint8List> compressPdfFromBytes({
+    required Uint8List inputBytes,
+    CompressionQuality quality = CompressionQuality.balanced,
+    Function(double)? onProgress,
+  }) async {
+      final document = await pdfx_lib.PdfDocument.openData(inputBytes);
       final pdf = pw.Document();
       final pageCount = document.pagesCount;
       
@@ -78,8 +122,13 @@ class PdfCompressor {
         if (image == null) continue;
 
         // Apply compression optimizations in background isolate
-        image = await compute(_optimizeImageIsolate, 
-          _OptimizeImageParams(image: image, settings: settings));
+        // On web, compute might need to be handled carefully or just run on main thread if simple
+        if (!kIsWeb) {
+           image = await compute(_optimizeImageIsolate, 
+            _OptimizeImageParams(image: image, settings: settings));
+        } else {
+           image = _optimizeImageIsolate(_OptimizeImageParams(image: image, settings: settings));
+        }
 
         // Encode with JPEG compression
         final compressedBytes = Uint8List.fromList(
@@ -104,30 +153,7 @@ class PdfCompressor {
       }
 
       await document.close();
-
-      // Save compressed PDF
-      final finalPath = outputPath ?? await _generateOutputPath(inputPath);
-      final outputFile = File(finalPath);
-      await outputFile.writeAsBytes(await pdf.save());
-
-      final compressedSize = await outputFile.length();
-      final compressionRatio = ((originalSize - compressedSize) / originalSize * 100);
-      final duration = DateTime.now().difference(startTime);
-
-      return CompressionResult(
-        success: true,
-        inputPath: inputPath,
-        outputPath: finalPath,
-        originalSize: originalSize,
-        compressedSize: compressedSize,
-        compressionRatio: compressionRatio,
-        pageCount: pageCount,
-        duration: duration,
-        quality: quality,
-      );
-    } catch (e) {
-      throw Exception('PDF compression failed: $e');
-    }
+      return await pdf.save();
   }
 
   /// Compress with custom settings

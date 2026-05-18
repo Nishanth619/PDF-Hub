@@ -1,5 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:ilovepdf_flutter/utils/platform_file_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -16,19 +18,24 @@ import 'package:ilovepdf_flutter/services/ad_service.dart';
 
 /// Model to hold PDF file info
 class PdfFileInfo {
-  final File file;
+  final File? file;
+  final PlatformFile? platformFile;
   final int pageCount;
   final int fileSize;
   final Uint8List? thumbnail;
   
   PdfFileInfo({
-    required this.file,
+    this.file,
+    this.platformFile,
     required this.pageCount,
     required this.fileSize,
     this.thumbnail,
   });
   
-  String get fileName => file.path.split('/').last.split('\\').last;
+  String get fileName {
+    if (platformFile != null) return platformFile!.name;
+    return file!.path.split('/').last.split('\\').last;
+  }
   
   String get fileSizeFormatted {
     if (fileSize < 1024) return '$fileSize B';
@@ -50,7 +57,7 @@ class _MergeScreenState extends State<MergeScreen> {
   bool _isLoadingInfo = false;
   double _progress = 0.0;
   String? _outputFilePath;
-  String _outputFileName = 'Merged_PDF';
+  final String _outputFileName = 'Merged_PDF';
   final TextEditingController _fileNameController = TextEditingController(text: 'Merged_PDF');
 
   int get _totalPages => _pdfFiles.fold(0, (sum, pdf) => sum + pdf.pageCount);
@@ -67,9 +74,13 @@ class _MergeScreenState extends State<MergeScreen> {
       type: FileType.custom,
       allowedExtensions: ['pdf'],
       allowMultiple: true,
+      withData: kIsWeb, // Important for web to get bytes
     );
 
     if (result != null && result.files.isNotEmpty) {
+      // Preload interstitial ad so it's ready when operation completes
+      AdService().preloadForOperation();
+      
       setState(() {
         _isLoadingInfo = true;
         _outputFilePath = null;
@@ -77,18 +88,22 @@ class _MergeScreenState extends State<MergeScreen> {
       });
       
       for (var file in result.files) {
-        if (file.path != null) {
-          await _addPdfFile(File(file.path!));
-        }
+         await _addPdfFile(file);
       }
       
       setState(() => _isLoadingInfo = false);
     }
   }
   
-  Future<void> _addPdfFile(File file) async {
+  Future<void> _addPdfFile(PlatformFile file) async {
     try {
-      final bytes = await file.readAsBytes();
+      final Uint8List bytes;
+      if (kIsWeb) {
+        bytes = file.bytes!;
+      } else {
+        bytes = await File(file.path!).readAsBytes();
+      }
+
       final document = sf_pdf.PdfDocument(inputBytes: bytes);
       final pageCount = document.pages.count;
       document.dispose();
@@ -106,7 +121,8 @@ class _MergeScreenState extends State<MergeScreen> {
       
       setState(() {
         _pdfFiles.add(PdfFileInfo(
-          file: file,
+          file: kIsWeb ? null : File(file.path!),
+          platformFile: file,
           pageCount: pageCount,
           fileSize: bytes.length,
           thumbnail: thumbnail,
@@ -114,7 +130,7 @@ class _MergeScreenState extends State<MergeScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading ${file.path.split('/').last}: $e')),
+        SnackBar(content: Text('Error loading ${file.name}: $e')),
       );
     }
   }
@@ -133,23 +149,51 @@ class _MergeScreenState extends State<MergeScreen> {
     });
 
     try {
-      // Get file paths
-      final List<String> filePaths = _pdfFiles
-          .map((pdf) => pdf.file.path)
-          .where((path) => path.isNotEmpty)
-          .toList();
+      String outputPath;
       
-      if (filePaths.length < 2) {
-        throw Exception('Not enough valid PDF paths');
+      if (kIsWeb) {
+        // Web implementation using bytes
+        final List<Uint8List> fileBytes = _pdfFiles.map((pdf) => pdf.platformFile!.bytes!).toList();
+        final mergedBytes = await PdfMerger.mergePdfsFromBytes(
+          pdfBytesList: fileBytes,
+          onProgress: (progress) {
+             setState(() => _progress = progress);
+          },
+        );
+        
+        // On web we download the file directly, so path is not really used the same way
+        // But our saveFile helper might return something or just void
+        // We'll use a hypothetical helper or valid download mechanism
+        // For now, let's assume we use PlatformFileUtils.saveFile
+        // But PdfMerger doesn't know about PlatformFileUtils yet unless we updated it.
+        // Actually PdfMerger.mergePdfsFromBytes returns Uint8List.
+        
+        // We need to save it.
+        // We can't import PlatformFileUtils here unless we import it.
+        // Let's rely on PdfMerger.mergePdfs signature which returns String path.
+        // But here we are calling mergePdfsFromBytes which returns bytes.
+        
+        // Construct a "path" for display or just use a placeholder
+        final fileName = '${_outputFileName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        
+        // Trigger download
+        await PlatformFileUtils.saveFile(fileName, mergedBytes);
+        outputPath = fileName; // Display name
+        
+      } else {
+        // Mobile implementation
+        final List<String> filePaths = _pdfFiles
+            .map((pdf) => pdf.file!.path)
+            .where((path) => path.isNotEmpty)
+            .toList();
+        
+        outputPath = await PdfMerger.mergePdfs(
+          pdfPaths: filePaths,
+          onProgress: (progress) {
+            setState(() => _progress = progress);
+          },
+        );
       }
-      
-      // Merge PDFs
-      final outputPath = await PdfMerger.mergePdfs(
-        pdfPaths: filePaths,
-        onProgress: (progress) {
-          setState(() => _progress = progress);
-        },
-      );
       
       setState(() {
         _outputFilePath = outputPath;
@@ -558,7 +602,7 @@ class _MergeScreenState extends State<MergeScreen> {
                           itemBuilder: (context, index) {
                             final pdf = _pdfFiles[index];
                             return Dismissible(
-                              key: ValueKey(pdf.file.path + index.toString()),
+                              key: ValueKey((pdf.file?.path ?? '') + index.toString()),
                               direction: DismissDirection.endToStart,
                               onDismissed: (_) => _removeFile(index),
                               background: Container(

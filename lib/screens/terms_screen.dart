@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'package:universal_io/io.dart' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';

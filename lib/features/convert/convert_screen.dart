@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -76,6 +76,9 @@ class _ConvertScreenState extends State<ConvertScreen> {
           _showError('No valid PDF files selected (max 50MB each).');
           return;
         }
+        
+        // Preload interstitial ad so it's ready when operation completes
+        AdService().preloadForOperation();
 
         setState(() {
           _selectedPDFs = validFiles;

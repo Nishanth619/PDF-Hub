@@ -7,6 +7,7 @@ class PdfTool {
   final String route;
   final String category; // 'edit', 'convert', 'organize', 'forms'
   final bool isNew; // For "NEW" badge
+  final bool webSupported; // Whether this tool works on web
 
   PdfTool({
     required this.id,
@@ -17,6 +18,7 @@ class PdfTool {
     required this.route,
     this.category = 'all',
     this.isNew = false,
+    this.webSupported = false, // Default to not web-supported
   });
 }
 
@@ -29,6 +31,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#E91E63', '#C2185B'],
     route: '/imagetopdf',
     category: 'convert',
+    webSupported: true, // ✅ Web compatible
   ),
   PdfTool(
     id: 'annotate',
@@ -38,6 +41,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#FF9800', '#F57C00'],
     route: '/annotate',
     category: 'edit',
+    webSupported: false, // ❌ Uses path_provider
   ),
   PdfTool(
     id: 'merge',
@@ -47,6 +51,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#43A047', '#2E7D32'],
     route: '/merge',
     category: 'organize',
+    webSupported: true, // ✅ Web compatible
   ),
   PdfTool(
     id: 'split',
@@ -56,6 +61,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#FF9800', '#F57C00'],
     route: '/split',
     category: 'organize',
+    webSupported: true, // ✅ Web compatible
   ),
   PdfTool(
     id: 'compress',
@@ -65,6 +71,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#9C27B0', '#7B1FA2'],
     route: '/compress',
     category: 'organize',
+    webSupported: true, // ✅ Web compatible
   ),
   PdfTool(
     id: 'rotate',
@@ -74,6 +81,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#00BCD4', '#0097A7'],
     route: '/rotate',
     category: 'edit',
+    webSupported: true, // ✅ Web compatible
   ),
   PdfTool(
     id: 'watermark',
@@ -83,6 +91,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#607D8B', '#455A64'],
     route: '/watermark',
     category: 'edit',
+    webSupported: false, // ❌ Uses path_provider
   ),
   PdfTool(
     id: 'pagenumber',
@@ -92,6 +101,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#795548', '#5D4037'],
     route: '/pagenumber',
     category: 'edit',
+    webSupported: false, // ❌ Uses path_provider
   ),
   PdfTool(
     id: 'ocr',
@@ -101,6 +111,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#6A11CB', '#2575FC'],
     route: '/ocr',
     category: 'convert',
+    webSupported: false, // ❌ Uses ML Kit (mobile only)
   ),
   PdfTool(
     id: 'convert',
@@ -110,6 +121,7 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#4A80F0', '#1E88E5'],
     route: '/convert',
     category: 'convert',
+    webSupported: false, // ❌ Uses path_provider
   ),
   PdfTool(
     id: 'formfiller',
@@ -119,5 +131,17 @@ final List<PdfTool> pdfTools = [
     gradientColors: ['#FF6B6B', '#FF8E53'],
     route: '/formfiller',
     category: 'forms',
+    webSupported: false, // ❌ Uses path_provider
+  ),
+  PdfTool(
+    id: 'pdfviewer',
+    title: 'PDF Reader',
+    description: 'Read, search & bookmark PDFs',
+    icon: 'assets/icons/annotate.svg', // reuse existing icon
+    gradientColors: ['#1565C0', '#42A5F5'],
+    route: '/pdfviewer',
+    category: 'forms',
+    isNew: true,
+    webSupported: false, // ❌ Uses file system
   ),
 ];

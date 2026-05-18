@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ilovepdf_flutter/models/history_item.dart';
@@ -15,8 +16,13 @@ class HistoryUtils {
   }) async {
     try {
       // Get file size
-      final file = File(filePath);
-      final fileSize = await file.length();
+      int fileSize = 0;
+      if (!kIsWeb) {
+        final file = File(filePath);
+        if (await file.exists()) {
+           fileSize = await file.length();
+        }
+      }
       
       // Create history item
       final historyItem = HistoryItem(

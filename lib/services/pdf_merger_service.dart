@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -388,6 +388,18 @@ class _PdfMergerWidgetState extends State<PdfMergerWidget> {
 /// Powerful PDF Splitter for Flutter using Syncfusion
 /// Accurately splits PDFs preserving all content
 class PdfSplitter {
+  /// Get PDF info from bytes
+  static Future<PdfInfo> getPdfInfoFromBytes(Uint8List bytes, String fileName) async {
+    final document = PdfDocument(inputBytes: bytes);
+    final info = PdfInfo(
+      pageCount: document.pages.count,
+      fileSize: bytes.length,
+      filePath: fileName,
+    );
+    document.dispose();
+    return info;
+  }
+
   /// Get PDF info (page count, file size)
   static Future<PdfInfo> getPdfInfo(String pdfPath) async {
     final file = File(pdfPath);
@@ -402,10 +414,8 @@ class PdfSplitter {
     return info;
   }
 
-  /// Generate thumbnails for all pages (for visual selection)
-  static Future<List<Uint8List>> getPageThumbnails(String pdfPath, {double dpi = 72}) async {
-    final file = File(pdfPath);
-    final bytes = await file.readAsBytes();
+  /// Generate thumbnails from bytes
+  static Future<List<Uint8List>> getPageThumbnailsFromBytes(Uint8List bytes, {double dpi = 72}) async {
     final List<Uint8List> thumbnails = [];
     
     await for (final page in Printing.raster(bytes, dpi: dpi)) {
@@ -415,19 +425,19 @@ class PdfSplitter {
     return thumbnails;
   }
 
-  /// Split PDF into individual pages (one page per file)
-  static Future<List<String>> splitIntoPages({
-    required String pdfPath,
-    String? outputDir,
-    Function(double)? onProgress,
-  }) async {
+  /// Generate thumbnails for all pages (for visual selection)
+  static Future<List<Uint8List>> getPageThumbnails(String pdfPath, {double dpi = 72}) async {
     final file = File(pdfPath);
     final bytes = await file.readAsBytes();
-    
-    final String outputDirectory = outputDir ?? await _getDefaultOutputDir();
-    await Directory(outputDirectory).create(recursive: true);
-    
-    final List<String> outputPaths = [];
+    return getPageThumbnailsFromBytes(bytes, dpi: dpi);
+  }
+
+  /// Split PDF into individual pages from bytes
+  static Future<List<Uint8List>> splitIntoPagesFromBytes({
+    required Uint8List bytes,
+    Function(double)? onProgress,
+  }) async {
+    final List<Uint8List> outputBytesList = [];
     int pageIndex = 0;
     
     await for (final page in Printing.raster(bytes, dpi: 72)) {
@@ -443,26 +453,21 @@ class PdfSplitter {
         ),
       );
       
-      final outputPath = '$outputDirectory/page_${pageIndex + 1}.pdf';
-      final pdfBytes = await pdf.save();
-      await File(outputPath).writeAsBytes(pdfBytes);
-      outputPaths.add(outputPath);
+      outputBytesList.add(await pdf.save());
       
       pageIndex++;
       if (onProgress != null) {
-        // We don't know total pages in stream, estimate
-        onProgress(0.9); // Will update to 1.0 at end
+        onProgress(0.9); // Approximate progress
       }
     }
     
     if (onProgress != null) onProgress(1.0);
-    return outputPaths;
+    return outputBytesList;
   }
 
-  /// Split PDF by page ranges
-  static Future<List<String>> splitByRanges({
+  /// Split PDF into individual pages (one page per file)
+  static Future<List<String>> splitIntoPages({
     required String pdfPath,
-    required List<PageRange> ranges,
     String? outputDir,
     Function(double)? onProgress,
   }) async {
@@ -472,13 +477,31 @@ class PdfSplitter {
     final String outputDirectory = outputDir ?? await _getDefaultOutputDir();
     await Directory(outputDirectory).create(recursive: true);
     
+    final List<String> outputPaths = [];
+    final outputBytesList = await splitIntoPagesFromBytes(bytes: bytes, onProgress: onProgress);
+    
+    for (int i = 0; i < outputBytesList.length; i++) {
+        final outputPath = '$outputDirectory/page_${i + 1}.pdf';
+        await File(outputPath).writeAsBytes(outputBytesList[i]);
+        outputPaths.add(outputPath);
+    }
+    
+    return outputPaths;
+  }
+
+  /// Split PDF by page ranges from bytes
+  static Future<List<Uint8List>> splitByRangesFromBytes({
+    required Uint8List bytes,
+    required List<PageRange> ranges,
+    Function(double)? onProgress,
+  }) async {
     // Collect all page images first
     final List<Uint8List> pageImages = [];
     await for (final page in Printing.raster(bytes, dpi: 72)) {
       pageImages.add(await page.toPng());
     }
     
-    final List<String> outputPaths = [];
+    final List<Uint8List> outputBytesList = [];
     
     for (int rangeIndex = 0; rangeIndex < ranges.length; rangeIndex++) {
       final range = ranges[rangeIndex];
@@ -496,33 +519,50 @@ class PdfSplitter {
         );
       }
       
-      final outputPath = '$outputDirectory/pages_${range.startPage}-${range.endPage}.pdf';
-      await File(outputPath).writeAsBytes(await pdf.save());
-      outputPaths.add(outputPath);
+      outputBytesList.add(await pdf.save());
       
       if (onProgress != null) {
         onProgress((rangeIndex + 1) / ranges.length);
       }
     }
     
-    return outputPaths;
+    return outputBytesList;
   }
 
-  /// Split PDF into chunks of specified size
-  static Future<List<String>> splitIntoChunks({
+  /// Split PDF by page ranges
+  static Future<List<String>> splitByRanges({
     required String pdfPath,
-    required int chunkSize,
+    required List<PageRange> ranges,
     String? outputDir,
     Function(double)? onProgress,
   }) async {
-    if (chunkSize < 1) throw ArgumentError('Chunk size must be at least 1');
-
     final file = File(pdfPath);
     final bytes = await file.readAsBytes();
     
     final String outputDirectory = outputDir ?? await _getDefaultOutputDir();
     await Directory(outputDirectory).create(recursive: true);
     
+    final outputBytesList = await splitByRangesFromBytes(bytes: bytes, ranges: ranges, onProgress: onProgress);
+    final List<String> outputPaths = [];
+
+    for (int i = 0; i < outputBytesList.length; i++) {
+        final range = ranges[i];
+        final outputPath = '$outputDirectory/pages_${range.startPage}-${range.endPage}.pdf';
+        await File(outputPath).writeAsBytes(outputBytesList[i]);
+        outputPaths.add(outputPath);
+    }
+    
+    return outputPaths;
+  }
+
+  /// Split PDF into chunks from bytes
+  static Future<List<Uint8List>> splitIntoChunksFromBytes({
+    required Uint8List bytes,
+    required int chunkSize,
+    Function(double)? onProgress,
+  }) async {
+     if (chunkSize < 1) throw ArgumentError('Chunk size must be at least 1');
+
     // Collect all page images
     final List<Uint8List> pageImages = [];
     await for (final page in Printing.raster(bytes, dpi: 72)) {
@@ -530,7 +570,7 @@ class PdfSplitter {
     }
     
     final totalChunks = (pageImages.length / chunkSize).ceil();
-    final List<String> outputPaths = [];
+    final List<Uint8List> outputBytesList = [];
     
     for (int chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
       final startPage = chunkIndex * chunkSize;
@@ -547,29 +587,48 @@ class PdfSplitter {
         );
       }
       
-      final outputPath = '$outputDirectory/chunk_${chunkIndex + 1}.pdf';
-      await File(outputPath).writeAsBytes(await pdf.save());
-      outputPaths.add(outputPath);
+      outputBytesList.add(await pdf.save());
       
       if (onProgress != null) {
         onProgress((chunkIndex + 1) / totalChunks);
       }
     }
     
-    return outputPaths;
+    return outputBytesList;
   }
 
-  /// Extract specific pages from PDF
-  static Future<String> extractPages({
+  /// Split PDF into chunks of specified size
+  static Future<List<String>> splitIntoChunks({
     required String pdfPath,
-    required List<int> pageNumbers,
-    String? outputPath,
+    required int chunkSize,
+    String? outputDir,
     Function(double)? onProgress,
   }) async {
     final file = File(pdfPath);
     final bytes = await file.readAsBytes();
     
-    // Collect all page images
+    final String outputDirectory = outputDir ?? await _getDefaultOutputDir();
+    await Directory(outputDirectory).create(recursive: true);
+    
+    final outputBytesList = await splitIntoChunksFromBytes(bytes: bytes, chunkSize: chunkSize, onProgress: onProgress);
+    final List<String> outputPaths = [];
+    
+    for (int i = 0; i < outputBytesList.length; i++) {
+        final outputPath = '$outputDirectory/chunk_${i + 1}.pdf';
+        await File(outputPath).writeAsBytes(outputBytesList[i]);
+        outputPaths.add(outputPath);
+    }
+    
+    return outputPaths;
+  }
+
+  /// Extract specific pages from bytes
+  static Future<Uint8List> extractPagesFromBytes({
+    required Uint8List bytes,
+    required List<int> pageNumbers,
+    Function(double)? onProgress,
+  }) async {
+      // Collect all page images
     final List<Uint8List> pageImages = [];
     await for (final page in Printing.raster(bytes, dpi: 72)) {
       pageImages.add(await page.toPng());
@@ -590,13 +649,11 @@ class PdfSplitter {
       if (onProgress != null) onProgress((i + 1) / pageNumbers.length);
     }
     
-    final finalOutputPath = outputPath ?? await _getDefaultOutputPath('extracted');
-    await File(finalOutputPath).writeAsBytes(await pdf.save());
-    return finalOutputPath;
+    return await pdf.save();
   }
 
-  /// Remove specific pages from PDF (keep all except specified)
-  static Future<String> removePages({
+  /// Extract specific pages from PDF
+  static Future<String> extractPages({
     required String pdfPath,
     required List<int> pageNumbers,
     String? outputPath,
@@ -604,6 +661,20 @@ class PdfSplitter {
   }) async {
     final file = File(pdfPath);
     final bytes = await file.readAsBytes();
+    
+    final pdfBytes = await extractPagesFromBytes(bytes: bytes, pageNumbers: pageNumbers, onProgress: onProgress);
+    
+    final finalOutputPath = outputPath ?? await _getDefaultOutputPath('extracted');
+    await File(finalOutputPath).writeAsBytes(pdfBytes);
+    return finalOutputPath;
+  }
+
+  /// Remove specific pages from bytes
+  static Future<Uint8List> removePagesFromBytes({
+    required Uint8List bytes,
+    required List<int> pageNumbers,
+    Function(double)? onProgress,
+  }) async {
     final pagesToRemove = Set<int>.from(pageNumbers);
     
     // Collect all page images
@@ -627,20 +698,31 @@ class PdfSplitter {
       if (onProgress != null) onProgress((i + 1) / pageImages.length);
     }
     
-    final finalOutputPath = outputPath ?? await _getDefaultOutputPath('removed');
-    await File(finalOutputPath).writeAsBytes(await pdf.save());
-    return finalOutputPath;
+    return await pdf.save();
   }
 
-  /// Reverse page order
-  static Future<String> reverseOrder({
+  /// Remove specific pages from PDF (keep all except specified)
+  static Future<String> removePages({
     required String pdfPath,
+    required List<int> pageNumbers,
     String? outputPath,
     Function(double)? onProgress,
   }) async {
     final file = File(pdfPath);
     final bytes = await file.readAsBytes();
     
+    final pdfBytes = await removePagesFromBytes(bytes: bytes, pageNumbers: pageNumbers, onProgress: onProgress);
+    
+    final finalOutputPath = outputPath ?? await _getDefaultOutputPath('removed');
+    await File(finalOutputPath).writeAsBytes(pdfBytes);
+    return finalOutputPath;
+  }
+
+  /// Reverse page order from bytes
+  static Future<Uint8List> reverseOrderFromBytes({
+    required Uint8List bytes,
+    Function(double)? onProgress,
+  }) async {
     // Collect all page images
     final List<Uint8List> pageImages = [];
     await for (final page in Printing.raster(bytes, dpi: 72)) {
@@ -659,8 +741,22 @@ class PdfSplitter {
       if (onProgress != null) onProgress((pageImages.length - i) / pageImages.length);
     }
     
+    return await pdf.save();
+  }
+
+  /// Reverse page order
+  static Future<String> reverseOrder({
+    required String pdfPath,
+    String? outputPath,
+    Function(double)? onProgress,
+  }) async {
+    final file = File(pdfPath);
+    final bytes = await file.readAsBytes();
+    
+    final pdfBytes = await reverseOrderFromBytes(bytes: bytes, onProgress: onProgress);
+    
     final finalOutputPath = outputPath ?? await _getDefaultOutputPath('reversed');
-    await File(finalOutputPath).writeAsBytes(await pdf.save());
+    await File(finalOutputPath).writeAsBytes(pdfBytes);
     return finalOutputPath;
   }
 
